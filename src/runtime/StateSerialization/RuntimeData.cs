@@ -16,7 +16,7 @@ namespace Python.Runtime
     public static class RuntimeData
     {
 
-        public readonly static Func<IFormatter> DefaultFormatterFactory = () =>
+        public static readonly Func<IFormatter> DefaultFormatterFactory = () =>
         {
             try
             {
@@ -36,7 +36,9 @@ namespace Python.Runtime
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
 
                 _formatterFactory = value;
             }
@@ -69,7 +71,7 @@ namespace Python.Runtime
         /// <summary>
         /// Clears the old "clr_data" entry if a previous one is present.
         /// </summary>
-        static void ClearCLRData ()
+        private static void ClearCLRData()
         {
             BorrowedReference capsule = PySys_GetObject("clr_data");
             if (!capsule.IsNull)
@@ -158,7 +160,7 @@ namespace Python.Runtime
             PySys_SetObject("clr_data", default);
         }
 
-        static bool CheckSerializable (object o)
+        private static bool CheckSerializable(object o)
         {
             Type type = o.GetType();
             do
@@ -285,7 +287,7 @@ namespace Python.Runtime
             }
         }
 
-        static readonly string serialization_key_namepsace = "pythonnet_serialization_";
+        private static readonly string serialization_key_namepsace = "pythonnet_serialization_";
         /// <summary>
         /// Removes the serialization capsule from the `sys` module object.
         /// </summary>
@@ -343,7 +345,7 @@ namespace Python.Runtime
 
         }
 
-        static byte[] emptyBuffer = new byte[0];
+        private static byte[] emptyBuffer = new byte[0];
         /// <summary>
         /// Retreives the previously stored data on a Python capsule.
         /// Throws if the object corresponding to the <paramref name="key"/> parameter
@@ -358,7 +360,7 @@ namespace Python.Runtime
             if (capsule.IsNull)
             {
                 // nothing to do.
-                return new MemoryStream(emptyBuffer, writable:false);
+                return new MemoryStream(emptyBuffer, writable: false);
             }
             var ptr = PyCapsule_GetPointer(capsule, IntPtr.Zero);
             if (ptr == IntPtr.Zero)
@@ -369,8 +371,8 @@ namespace Python.Runtime
             }
             var len = (int)Marshal.ReadIntPtr(ptr);
             byte[] buffer = new byte[len];
-            Marshal.Copy(ptr+IntPtr.Size, buffer, 0, len);
-            return new MemoryStream(buffer, writable:false);
+            Marshal.Copy(ptr + IntPtr.Size, buffer, 0, len);
+            return new MemoryStream(buffer, writable: false);
         }
 
         internal static IFormatter CreateFormatter()

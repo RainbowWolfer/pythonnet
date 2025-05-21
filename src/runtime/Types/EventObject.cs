@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -27,9 +26,7 @@ namespace Python.Runtime
         /// </summary>
         public static NewReference tp_descr_get(BorrowedReference ds, BorrowedReference ob, BorrowedReference tp)
         {
-            var self = GetManagedObject(ds) as EventObject;
-
-            if (self == null)
+            if (GetManagedObject(ds) is not EventObject self)
             {
                 return Exceptions.RaiseTypeError("invalid argument");
             }

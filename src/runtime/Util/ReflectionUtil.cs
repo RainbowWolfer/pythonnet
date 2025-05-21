@@ -3,11 +3,14 @@ namespace Python.Runtime;
 using System;
 using System.Reflection;
 
-static class ReflectionUtil
+internal static class ReflectionUtil
 {
     public static MethodInfo? GetBaseGetMethod(this PropertyInfo property, bool nonPublic)
     {
-        if (property is null) throw new ArgumentNullException(nameof(property));
+        if (property is null)
+        {
+            throw new ArgumentNullException(nameof(property));
+        }
 
         Type baseType = property.DeclaringType.BaseType;
         BindingFlags bindingFlags = property.GetBindingFlags();
@@ -17,7 +20,9 @@ static class ReflectionUtil
             var baseProperty = baseType.GetProperty(property.Name, bindingFlags | BindingFlags.DeclaredOnly);
             var accessor = baseProperty?.GetGetMethod(nonPublic);
             if (accessor is not null)
+            {
                 return accessor;
+            }
 
             baseType = baseType.BaseType;
         }
@@ -27,7 +32,10 @@ static class ReflectionUtil
 
     public static MethodInfo? GetBaseSetMethod(this PropertyInfo property, bool nonPublic)
     {
-        if (property is null) throw new ArgumentNullException(nameof(property));
+        if (property is null)
+        {
+            throw new ArgumentNullException(nameof(property));
+        }
 
         Type baseType = property.DeclaringType.BaseType;
         BindingFlags bindingFlags = property.GetBindingFlags();
@@ -37,7 +45,9 @@ static class ReflectionUtil
             var baseProperty = baseType.GetProperty(property.Name, bindingFlags | BindingFlags.DeclaredOnly);
             var accessor = baseProperty?.GetSetMethod(nonPublic);
             if (accessor is not null)
+            {
                 return accessor;
+            }
 
             baseType = baseType.BaseType;
         }
@@ -56,7 +66,10 @@ static class ReflectionUtil
 
     public static Type? TryGetGenericDefinition(this Type type)
     {
-        if (type is null) throw new ArgumentNullException(nameof(type));
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
 
         return type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : null;
     }

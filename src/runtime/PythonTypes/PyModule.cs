@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Runtime.Serialization;
@@ -25,7 +24,7 @@ namespace Python.Runtime
             InitializeBuiltins();
         }
 
-        static StolenReference Create(string name)
+        private static StolenReference Create(string name)
         {
             if (name is null)
             {
@@ -65,7 +64,10 @@ namespace Python.Runtime
         /// <param name="name">Fully-qualified module or package name</param>
         public static PyObject Import(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             NewReference op = Runtime.PyImport_ImportModule(name);
             return IsModule(op.BorrowOrThrow()) ? new PyModule(op.Steal()) : op.MoveToPyObject();
@@ -124,7 +126,11 @@ namespace Python.Runtime
 
         internal static bool IsModule(BorrowedReference reference)
         {
-            if (reference == null) return false;
+            if (reference == null)
+            {
+                return false;
+            }
+
             BorrowedReference type = Runtime.PyObject_TYPE(reference);
             return Runtime.PyType_IsSubtype(type, Runtime.PyModuleType);
         }
@@ -162,8 +168,16 @@ namespace Python.Runtime
         /// </summary>
         public void Import(PyModule module, string asname)
         {
-            if (module is null) throw new ArgumentNullException(nameof(module));
-            if (asname is null) throw new ArgumentNullException(nameof(asname));
+            if (module is null)
+            {
+                throw new ArgumentNullException(nameof(module));
+            }
+
+            if (asname is null)
+            {
+                throw new ArgumentNullException(nameof(asname));
+            }
+
             this.SetPyValue(asname, module);
         }
 
@@ -173,11 +187,17 @@ namespace Python.Runtime
         /// </summary>
         public void Import(PyObject module, string? asname = null)
         {
-            if (module is null) throw new ArgumentNullException(nameof(module));
+            if (module is null)
+            {
+                throw new ArgumentNullException(nameof(module));
+            }
 
             asname ??= module.GetAttr("__name__").As<string>();
 
-            if (asname is null) throw new ArgumentException("Module has no name");
+            if (asname is null)
+            {
+                throw new ArgumentException("Module has no name");
+            }
 
             Set(asname, module);
         }
@@ -187,7 +207,10 @@ namespace Python.Runtime
         /// </summary>
         public void ImportAll(PyModule module)
         {
-            if (module is null) throw new ArgumentNullException(nameof(module));
+            if (module is null)
+            {
+                throw new ArgumentNullException(nameof(module));
+            }
 
             int result = Runtime.PyDict_Update(VarsRef, module.VarsRef);
             if (result < 0)
@@ -201,7 +224,10 @@ namespace Python.Runtime
         /// </remarks>
         public void ImportAll(PyObject module)
         {
-            if (module is null) throw new ArgumentNullException(nameof(module));
+            if (module is null)
+            {
+                throw new ArgumentNullException(nameof(module));
+            }
 
             if (!IsModule(module.Reference))
             {
@@ -220,7 +246,10 @@ namespace Python.Runtime
         /// </summary>
         public void ImportAll(PyDict dict)
         {
-            if (dict is null) throw new ArgumentNullException(nameof(dict));
+            if (dict is null)
+            {
+                throw new ArgumentNullException(nameof(dict));
+            }
 
             int result = Runtime.PyDict_Update(VarsRef, dict.Reference);
             if (result < 0)
@@ -238,7 +267,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Execute(PyObject script, PyDict? locals = null)
         {
-            if (script is null) throw new ArgumentNullException(nameof(script));
+            if (script is null)
+            {
+                throw new ArgumentNullException(nameof(script));
+            }
 
             Check();
             BorrowedReference _locals = locals == null ? variables : locals.obj;
@@ -265,7 +297,10 @@ namespace Python.Runtime
         /// </summary>
         public PyObject Eval(string code, PyDict? locals = null)
         {
-            if (code is null) throw new ArgumentNullException(nameof(code));
+            if (code is null)
+            {
+                throw new ArgumentNullException(nameof(code));
+            }
 
             Check();
             BorrowedReference _locals = locals == null ? VarsRef : locals.Reference;
@@ -323,7 +358,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyModule Set(string name, object? value)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             using var _value = Converter.ToPythonDetectType(value);
             SetPyValue(name, _value.Borrow());
@@ -349,7 +387,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyModule Remove(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             Check();
             using (var pyKey = new PyString(name))
@@ -368,7 +409,10 @@ namespace Python.Runtime
         /// </summary>
         public bool Contains(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             Check();
             using var pyKey = new PyString(name);
@@ -383,7 +427,10 @@ namespace Python.Runtime
         /// </exception>
         public PyObject Get(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             var state = TryGet(name, out var value);
             if (!state)
@@ -402,7 +449,10 @@ namespace Python.Runtime
         /// </remarks>
         public bool TryGet(string name, out PyObject? value)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             Check();
             using var pyKey = new PyString(name);
@@ -429,7 +479,10 @@ namespace Python.Runtime
         /// </remarks>
         public T Get<T>(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             Check();
             PyObject pyObj = Get(name);

@@ -3,7 +3,7 @@ using System;
 namespace Python.Runtime.Native;
 
 [Flags]
-enum PyMethodFlags : int
+internal enum PyMethodFlags : int
 {
     [Obsolete]
     OLDARGS = 0,

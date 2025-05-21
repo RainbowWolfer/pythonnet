@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -58,7 +57,7 @@ namespace Python.Runtime
             return mb.Alloc();
         }
 
-        PyObject Signature
+        private PyObject Signature
         {
             get
             {
@@ -109,13 +108,25 @@ namespace Python.Runtime
             }
         }
 
-        struct TypeSpecificityComparer : IComparer<Type>
+        private struct TypeSpecificityComparer : IComparer<Type>
         {
             public int Compare(Type a, Type b)
             {
-                if (a == b) return 0;
-                if (a.IsSubclassOf(b)) return 1;
-                if (b.IsSubclassOf(a)) return -1;
+                if (a == b)
+                {
+                    return 0;
+                }
+
+                if (a.IsSubclassOf(b))
+                {
+                    return 1;
+                }
+
+                if (b.IsSubclassOf(a))
+                {
+                    return -1;
+                }
+
                 throw new NotSupportedException();
             }
         }

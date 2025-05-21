@@ -4,7 +4,6 @@ using System.Runtime.Serialization;
 
 namespace Python.Runtime
 {
-    using MaybeMethodInfo = MaybeMethodBase<MethodInfo>;
     /// <summary>
     /// Implements a Python descriptor type that manages CLR properties.
     /// </summary>
@@ -23,7 +22,7 @@ namespace Python.Runtime
             CacheAccessors();
         }
 
-        void CacheAccessors()
+        private void CacheAccessors()
         {
             PropertyInfo md = info.Value;
             getter = md.GetGetMethod(true) ?? md.GetBaseGetMethod(true);
@@ -71,8 +70,7 @@ namespace Python.Runtime
                 }
             }
 
-            var co = GetManagedObject(ob) as CLRObject;
-            if (co == null)
+            if (GetManagedObject(ob) is not CLRObject co)
             {
                 return Exceptions.RaiseTypeError("invalid target");
             }
@@ -144,8 +142,7 @@ namespace Python.Runtime
             {
                 if (!is_static)
                 {
-                    var co = GetManagedObject(ob) as CLRObject;
-                    if (co == null)
+                    if (GetManagedObject(ob) is not CLRObject co)
                     {
                         Exceptions.RaiseTypeError("invalid target");
                         return -1;

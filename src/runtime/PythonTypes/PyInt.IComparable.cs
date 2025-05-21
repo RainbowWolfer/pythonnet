@@ -2,7 +2,7 @@ using System;
 
 namespace Python.Runtime;
 
-partial class PyInt : IComparable<long>, IComparable<int>, IComparable<sbyte>, IComparable<short>
+public partial class PyInt : IComparable<long>, IComparable<int>, IComparable<sbyte>, IComparable<short>
     , IComparable<ulong>, IComparable<uint>, IComparable<ushort>, IComparable<byte>
     , IEquatable<long>, IEquatable<int>, IEquatable<short>, IEquatable<sbyte>
     , IEquatable<ulong>, IEquatable<uint>, IEquatable<ushort>, IEquatable<byte>

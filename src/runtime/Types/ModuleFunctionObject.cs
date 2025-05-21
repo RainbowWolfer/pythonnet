@@ -31,7 +31,7 @@ namespace Python.Runtime
         /// <summary>
         /// __repr__ implementation.
         /// </summary>
-        public new static NewReference tp_repr(BorrowedReference ob)
+        public static new NewReference tp_repr(BorrowedReference ob)
         {
             var self = (ModuleFunctionObject)GetManagedObject(ob)!;
             return Runtime.PyString_FromString($"<CLRModuleFunction '{self.name}'>");

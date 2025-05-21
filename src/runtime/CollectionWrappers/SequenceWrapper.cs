@@ -37,7 +37,10 @@ namespace Python.Runtime.CollectionWrappers
         public void Clear()
         {
             if (IsReadOnly)
+            {
                 throw new NotImplementedException();
+            }
+
             int result = Runtime.PySequence_DelSlice(pyObject, 0, Count);
             if (result == -1)
             {
@@ -49,7 +52,12 @@ namespace Python.Runtime.CollectionWrappers
         {
             //not sure if IEquatable is implemented and this will work!
             foreach (var element in this)
-                if (object.Equals(element, item)) return true;
+            {
+                if (object.Equals(element, item))
+                {
+                    return true;
+                }
+            }
 
             return false;
         }
@@ -57,10 +65,14 @@ namespace Python.Runtime.CollectionWrappers
         public void CopyTo(T[] array, int arrayIndex)
         {
             if (array == null)
+            {
                 throw new NullReferenceException();
+            }
 
             if ((array.Length - arrayIndex) < this.Count)
+            {
                 throw new InvalidOperationException("Attempting to copy to an array that is too small");
+            }
 
             var index = 0;
             foreach (var item in this)
@@ -73,14 +85,21 @@ namespace Python.Runtime.CollectionWrappers
         protected bool removeAt(int index)
         {
             if (IsReadOnly)
+            {
                 throw new NotImplementedException();
+            }
+
             if (index >= Count || index < 0)
+            {
                 return false;
+            }
 
             int result = Runtime.PySequence_DelItem(pyObject, index);
 
             if (result == 0)
+            {
                 return true;
+            }
 
             Runtime.CheckExceptionOccurred();
             return false;
@@ -91,7 +110,11 @@ namespace Python.Runtime.CollectionWrappers
             var index = 0;
             foreach (var element in this)
             {
-                if (object.Equals(element, item)) return index;
+                if (object.Equals(element, item))
+                {
+                    return index;
+                }
+
                 index++;
             }
 
@@ -106,7 +129,10 @@ namespace Python.Runtime.CollectionWrappers
             //it is idiomatic in C# to return a bool rather than
             //throw for a failed Remove in ICollection
             if (result == false)
+            {
                 Runtime.PyErr_Clear();
+            }
+
             return result;
         }
     }

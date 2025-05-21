@@ -203,13 +203,18 @@ namespace Python.Runtime
             }
 
             using var instance = Converter.ToPython(e);
-            if (instance.IsNull()) return false;
+            if (instance.IsNull())
+            {
+                return false;
+            }
 
             var exceptionInfo = ExceptionDispatchInfo.Capture(e);
             using var pyInfo = Converter.ToPython(exceptionInfo);
 
             if (Runtime.PyObject_SetAttrString(instance.Borrow(), DispatchInfoAttribute, pyInfo.Borrow()) != 0)
+            {
                 return false;
+            }
 
             Debug.Assert(Runtime.PyObject_TypeCheck(instance.Borrow(), BaseException));
 
@@ -317,7 +322,10 @@ namespace Python.Runtime
 
             Exceptions.SetError(Exceptions.TypeError, message);
 
-            if (cause is null) return default;
+            if (cause is null)
+            {
+                return default;
+            }
 
             var typeError = PythonException.FetchCurrentRaw();
             typeError.Normalize();
@@ -376,12 +384,12 @@ namespace Python.Runtime
         public static PyObject UnicodeTranslateError;
         public static PyObject ValueError;
         public static PyObject ZeroDivisionError;
-//#ifdef MS_WINDOWS
+        //#ifdef MS_WINDOWS
         //public static IntPtr WindowsError;
-//#endif
-//#ifdef __VMS
+        //#endif
+        //#ifdef __VMS
         //public static IntPtr VMSError;
-//#endif
+        //#endif
 
         //PyAPI_DATA(PyObject *) PyExc_BufferError;
 

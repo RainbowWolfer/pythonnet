@@ -27,7 +27,10 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsNumberType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             return Runtime.PyNumber_Check(value.obj);
         }

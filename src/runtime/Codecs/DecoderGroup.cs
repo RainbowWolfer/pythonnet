@@ -8,16 +8,19 @@ namespace Python.Runtime.Codecs
     /// <summary>
     /// Represents a group of <see cref="IPyObjectDecoder"/>s. Useful to group them by priority.
     /// </summary>
-    public sealed class DecoderGroup: IPyObjectDecoder, IEnumerable<IPyObjectDecoder>, IDisposable
+    public sealed class DecoderGroup : IPyObjectDecoder, IEnumerable<IPyObjectDecoder>, IDisposable
     {
-        readonly List<IPyObjectDecoder> decoders = new();
+        private readonly List<IPyObjectDecoder> decoders = new();
 
         /// <summary>
         /// Add specified decoder to the group
         /// </summary>
         public void Add(IPyObjectDecoder item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             this.decoders.Add(item);
         }
@@ -32,7 +35,10 @@ namespace Python.Runtime.Codecs
         /// <inheritdoc />
         public bool TryDecode<T>(PyObject pyObj, out T? value)
         {
-            if (pyObj is null) throw new ArgumentNullException(nameof(pyObj));
+            if (pyObj is null)
+            {
+                throw new ArgumentNullException(nameof(pyObj));
+            }
 
             var decoder = this.GetDecoder(pyObj.GetPythonType(), typeof(T));
             if (decoder is null)
@@ -69,7 +75,10 @@ namespace Python.Runtime.Codecs
             this IPyObjectDecoder decoder,
             PyType objectType, Type targetType)
         {
-            if (decoder is null) throw new ArgumentNullException(nameof(decoder));
+            if (decoder is null)
+            {
+                throw new ArgumentNullException(nameof(decoder));
+            }
 
             if (decoder is IEnumerable<IPyObjectDecoder> composite)
             {

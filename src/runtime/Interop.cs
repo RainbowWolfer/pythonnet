@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using Python.Runtime.Reflection;
 using System.Reflection;
+using System.Runtime.InteropServices;
+
+using Python.Runtime.Reflection;
 
 namespace Python.Runtime
 {
@@ -61,39 +62,39 @@ namespace Python.Runtime
     /// </summary>
     // Py_TPFLAGS_*
     [Flags]
-    public enum TypeFlags: long
+    public enum TypeFlags : long
     {
-        HeapType = (1 << 9),
-        BaseType = (1 << 10),
-        Ready = (1 << 12),
-        Readying = (1 << 13),
-        HaveGC = (1 << 14),
+        HeapType = 1 << 9,
+        BaseType = 1 << 10,
+        Ready = 1 << 12,
+        Readying = 1 << 13,
+        HaveGC = 1 << 14,
         // 15 and 16 are reserved for stackless
         HaveStacklessExtension = 0,
         /* XXX Reusing reserved constants */
         /// <remarks>PythonNet specific</remarks>
-        HasClrInstance = (1 << 15),
+        HasClrInstance = 1 << 15,
         /// <remarks>PythonNet specific</remarks>
-        Subclass = (1 << 16),
+        Subclass = 1 << 16,
         /* Objects support nb_index in PyNumberMethods */
-        HaveVersionTag = (1 << 18),
-        ValidVersionTag = (1 << 19),
-        IsAbstract = (1 << 20),
-        HaveNewBuffer = (1 << 21),
+        HaveVersionTag = 1 << 18,
+        ValidVersionTag = 1 << 19,
+        IsAbstract = 1 << 20,
+        HaveNewBuffer = 1 << 21,
         // TODO: Implement FastSubclass functions
-        IntSubclass = (1 << 23),
-        LongSubclass = (1 << 24),
-        ListSubclass = (1 << 25),
-        TupleSubclass = (1 << 26),
-        StringSubclass = (1 << 27),
-        UnicodeSubclass = (1 << 28),
-        DictSubclass = (1 << 29),
-        BaseExceptionSubclass = (1 << 30),
-        TypeSubclass = (1 << 31),
+        IntSubclass = 1 << 23,
+        LongSubclass = 1 << 24,
+        ListSubclass = 1 << 25,
+        TupleSubclass = 1 << 26,
+        StringSubclass = 1 << 27,
+        UnicodeSubclass = 1 << 28,
+        DictSubclass = 1 << 29,
+        BaseExceptionSubclass = 1 << 30,
+        TypeSubclass = 1 << 31,
 
-        Default = (
+        Default =
             HaveStacklessExtension |
-            HaveVersionTag),
+            HaveVersionTag,
     }
 
 
@@ -104,32 +105,44 @@ namespace Python.Runtime
 
     internal class Interop
     {
-        static readonly Dictionary<MethodInfo, Type> delegateTypes = new();
+        private static readonly Dictionary<MethodInfo, Type> delegateTypes = new();
 
         internal static Type GetPrototype(MethodInfo method)
         {
             if (delegateTypes.TryGetValue(method, out var delegateType))
+            {
                 return delegateType;
+            }
 
             var parameters = method.GetParameters().Select(p => new ParameterHelper(p)).ToArray();
 
             foreach (var candidate in typeof(Interop).GetNestedTypes())
             {
                 if (!typeof(Delegate).IsAssignableFrom(candidate))
+                {
                     continue;
+                }
 
                 MethodInfo invoke = candidate.GetMethod("Invoke");
                 var candiateParameters = invoke.GetParameters();
                 if (candiateParameters.Length != parameters.Length)
+                {
                     continue;
+                }
 
                 var parametersMatch = parameters.Zip(candiateParameters,
                     (expected, actual) => expected.Matches(actual))
                     .All(matches => matches);
 
-                if (!parametersMatch) continue;
+                if (!parametersMatch)
+                {
+                    continue;
+                }
 
-                if (invoke.ReturnType != method.ReturnType) continue;
+                if (invoke.ReturnType != method.ReturnType)
+                {
+                    continue;
+                }
 
                 delegateTypes.Add(method, candidate);
                 return candidate;
@@ -207,7 +220,7 @@ namespace Python.Runtime
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct PyMethodDef
+    internal struct PyMethodDef
     {
         public IntPtr ml_name;
         public IntPtr ml_meth;

@@ -8,7 +8,9 @@ namespace Python.Runtime.Codecs
         internal static bool IsSequence(Type targetType)
         {
             if (!targetType.IsGenericType)
+            {
                 return false;
+            }
 
             return targetType.GetGenericTypeDefinition() == typeof(ICollection<>);
         }
@@ -16,7 +18,10 @@ namespace Python.Runtime.Codecs
         internal static bool IsSequence(PyType objectType)
         {
             //must implement iterable protocol to fully implement sequence protocol
-            if (!IterableDecoder.IsIterable(objectType)) return false;
+            if (!IterableDecoder.IsIterable(objectType))
+            {
+                return false;
+            }
 
             //returns wheter it implements the sequence protocol
             //according to python doc this needs to exclude dict subclasses
@@ -32,7 +37,10 @@ namespace Python.Runtime.Codecs
 
         public bool TryDecode<T>(PyObject pyObj, out T value)
         {
-            if (pyObj == null) throw new ArgumentNullException(nameof(pyObj));
+            if (pyObj == null)
+            {
+                throw new ArgumentNullException(nameof(pyObj));
+            }
 
             var elementType = typeof(T).GetGenericArguments()[0];
             Type collectionType = typeof(CollectionWrappers.SequenceWrapper<>).MakeGenericType(elementType);

@@ -1,5 +1,5 @@
 namespace Python.Runtime.Native;
 
-struct PyThreadState
+internal struct PyThreadState
 {
 }

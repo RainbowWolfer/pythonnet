@@ -20,7 +20,9 @@ public struct UnsafeReferenceWithRun
     internal BorrowedReference CheckRun()
     {
         if (Run != Runtime.GetRun())
+        {
             throw new RuntimeShutdownException(RawObj);
+        }
 
         return Ref;
     }

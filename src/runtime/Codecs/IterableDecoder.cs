@@ -9,10 +9,14 @@ namespace Python.Runtime.Codecs
         {
             //if it is a plain IEnumerable, we can decode it using sequence protocol.
             if (targetType == typeof(System.Collections.IEnumerable))
+            {
                 return true;
+            }
 
             if (!targetType.IsGenericType)
+            {
                 return false;
+            }
 
             return targetType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
         }

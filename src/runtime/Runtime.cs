@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Collections.Generic;
+
 using Python.Runtime.Native;
-using System.Linq;
+
 using static System.FormattableString;
 
 namespace Python.Runtime
@@ -24,19 +26,28 @@ namespace Python.Runtime
             set
             {
                 if (_isInitialized)
+                {
                     throw new InvalidOperationException("This property must be set before runtime is initialized");
+                }
+
                 _PythonDll = value;
             }
         }
 
-        static string? _PythonDll = GetDefaultDllName();
+        private static string? _PythonDll = GetDefaultDllName();
         private static string? GetDefaultDllName()
         {
             string dll = Environment.GetEnvironmentVariable("PYTHONNET_PYDLL");
-            if (dll is not null) return dll;
+            if (dll is not null)
+            {
+                return dll;
+            }
 
             string verString = Environment.GetEnvironmentVariable("PYTHONNET_PYVER");
-            if (!Version.TryParse(verString, out var version)) return null;
+            if (!Version.TryParse(verString, out var version))
+            {
+                return null;
+            }
 
             return GetDefaultDllName(version);
         }
@@ -72,7 +83,7 @@ namespace Python.Runtime
 
         public static int MainManagedThreadId { get; private set; }
 
-        private static readonly List<PyObject> _pyRefs = new ();
+        private static readonly List<PyObject> _pyRefs = new();
 
         internal static Version PyVersion
         {
@@ -86,8 +97,8 @@ namespace Python.Runtime
             }
         }
 
-        const string RunSysPropName = "__pythonnet_run__";
-        static int run = 0;
+        private const string RunSysPropName = "__pythonnet_run__";
+        private static int run = 0;
 
         internal static int GetRun()
         {
@@ -191,7 +202,7 @@ namespace Python.Runtime
             hexCallable = new(() => new PyString("%x").GetAttr("__mod__"));
         }
 
-        static void NewRun()
+        private static void NewRun()
         {
             run++;
             using var pyRun = PyLong_FromLongLong(run);
@@ -330,12 +341,15 @@ namespace Python.Runtime
             }
         }
 
-        const int MaxCollectRetriesOnShutdown = 20;
+        private const int MaxCollectRetriesOnShutdown = 20;
         internal static int _collected;
-        static bool TryCollectingGarbage(int runs, bool forceBreakLoops,
+        private static bool TryCollectingGarbage(int runs, bool forceBreakLoops,
                                          bool obj = true, bool derived = true, bool buffer = true)
         {
-            if (runs <= 0) throw new ArgumentOutOfRangeException(nameof(runs));
+            if (runs <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(runs));
+            }
 
             for (int attempt = 0; attempt < runs; attempt++)
             {
@@ -352,7 +366,10 @@ namespace Python.Runtime
                 }
                 if (Volatile.Read(ref _collected) == 0 && pyCollected == 0)
                 {
-                    if (attempt + 1 == runs) return true;
+                    if (attempt + 1 == runs)
+                    {
+                        return true;
+                    }
                 }
                 else if (forceBreakLoops)
                 {
@@ -371,7 +388,7 @@ namespace Python.Runtime
         public static bool TryCollectingGarbage(int runs)
             => TryCollectingGarbage(runs, forceBreakLoops: false);
 
-        static void DisposeLazyObject(Lazy<PyObject> pyObject)
+        private static void DisposeLazyObject(Lazy<PyObject> pyObject)
         {
             if (pyObject.IsValueCreated)
             {
@@ -417,7 +434,10 @@ namespace Python.Runtime
         private static void ResetPyMembers()
         {
             foreach (var pyObj in _pyRefs)
+            {
                 pyObj.Dispose();
+            }
+
             _pyRefs.Clear();
         }
 
@@ -426,7 +446,11 @@ namespace Python.Runtime
             var modules = PyImport_GetModuleDict();
             using var items = PyDict_Items(modules);
             nint length = PyList_Size(items.BorrowOrThrow());
-            if (length < 0) throw PythonException.ThrowLastAsClrException();
+            if (length < 0)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             for (nint i = 0; i < length; i++)
             {
                 var item = PyList_GetItem(items.Borrow(), i);
@@ -500,9 +524,9 @@ namespace Python.Runtime
         internal const int Py_GE = 5;
 
         internal static BorrowedReference PyTrue => _PyTrue;
-        static PyObject _PyTrue;
+        private static PyObject _PyTrue;
         internal static BorrowedReference PyFalse => _PyFalse;
-        static PyObject _PyFalse;
+        private static PyObject _PyFalse;
         internal static BorrowedReference PyNone => _PyNone;
         private static PyObject _PyNone;
 
@@ -571,7 +595,7 @@ namespace Python.Runtime
                 if (mt is ClassBase b)
                 {
                     var _type = b.type;
-                    t = _type.Valid ?  _type.Value : null;
+                    t = _type.Valid ? _type.Value : null;
                 }
                 else if (mt is CLRObject ob)
                 {
@@ -615,7 +639,11 @@ namespace Python.Runtime
             Debug.Assert(op == null || Refcount(new BorrowedReference(op.Pointer)) > 0);
             Debug.Assert(_isInitialized || Py_IsInitialized() != 0 || _Py_IsFinalizing() != false);
 #endif
-            if (op == null) return;
+            if (op == null)
+            {
+                return;
+            }
+
             Py_DecRef(op.AnalyzerWorkaround());
             return;
         }
@@ -784,7 +812,7 @@ namespace Python.Runtime
 
         internal static IntPtr Py_GetBuildInfo() => Delegates.Py_GetBuildInfo();
 
-        const PyCompilerFlags Utf8String = PyCompilerFlags.IGNORE_COOKIE | PyCompilerFlags.SOURCE_IS_UTF8;
+        private const PyCompilerFlags Utf8String = PyCompilerFlags.IGNORE_COOKIE | PyCompilerFlags.SOURCE_IS_UTF8;
 
         internal static int PyRun_SimpleString(string code)
         {
@@ -933,7 +961,11 @@ namespace Python.Runtime
             Debug.Assert(ob != null);
             var type = PyObject_TYPE(ob);
             int offset = Util.ReadInt32(type, TypeOffset.tp_weaklistoffset);
-            if (offset <= 0) return BorrowedReference.Null;
+            if (offset <= 0)
+            {
+                return BorrowedReference.Null;
+            }
+
             Debug.Assert(offset > 0);
             return Util.ReadRef(ob, offset);
         }
@@ -973,9 +1005,11 @@ namespace Python.Runtime
         internal static void AssertNoErorSet()
         {
             if (Exceptions.ErrorOccurred())
+            {
                 throw new InvalidOperationException(
                     "Can't call with exception set",
                     PythonException.FetchCurrent());
+            }
         }
 
 
@@ -984,15 +1018,23 @@ namespace Python.Runtime
         internal static void _Py_NewReference(BorrowedReference ob)
         {
             if (Delegates._Py_NewReference != null)
+            {
                 Delegates._Py_NewReference(ob);
+            }
         }
 
         internal static bool? _Py_IsFinalizing()
         {
             if (Delegates._Py_IsFinalizing != null)
+            {
                 return Delegates._Py_IsFinalizing() != 0;
+            }
             else
-                return null; ;
+            {
+                return null;
+            }
+
+            ;
         }
 
         //====================================================================
@@ -1248,13 +1290,15 @@ namespace Python.Runtime
         {
             int byteorder = BitConverter.IsLittleEndian ? -1 : 1;
             int* byteorderPtr = &byteorder;
-            fixed(char* ptr = value)
+            fixed (char* ptr = value)
+            {
                 return Delegates.PyUnicode_DecodeUTF16(
                     (IntPtr)ptr,
                     value.Length * sizeof(Char),
                     IntPtr.Zero,
                     (IntPtr)byteorderPtr
                 );
+            }
         }
 
 
@@ -1333,7 +1377,7 @@ namespace Python.Runtime
             return null;
         }
 
-        static string GetManagedStringFromUnicodeObject(BorrowedReference op)
+        private static string GetManagedStringFromUnicodeObject(BorrowedReference op)
         {
 #if DEBUG
             var type = PyObject_TYPE(op);
@@ -1348,7 +1392,7 @@ namespace Python.Runtime
             char* codePoints = (char*)PyBytes_AsString(bytes.Borrow());
             return new string(codePoints,
                               startIndex: 1, // skip BOM
-                              length: bytesLength / 2 - 1); // utf16 - BOM
+                              length: (bytesLength / 2) - 1); // utf16 - BOM
         }
 
 
@@ -1496,7 +1540,10 @@ namespace Python.Runtime
         internal static bool PyIter_Check(BorrowedReference ob)
         {
             if (Delegates.PyIter_Check != null)
+            {
                 return Delegates.PyIter_Check(ob) != 0;
+            }
+
             var ob_type = PyObject_TYPE(ob);
             var tp_iternext = (NativeFunc*)Util.ReadIntPtr(ob_type, TypeOffset.tp_iternext);
             return tp_iternext != (NativeFunc*)0 && tp_iternext != _PyObject_NextNotImplemented;
@@ -1649,7 +1696,9 @@ namespace Python.Runtime
         internal static bool PyObject_GC_IsTracked(BorrowedReference ob)
         {
             if (PyVersion >= new Version(3, 9))
+            {
                 return Delegates.PyObject_GC_IsTracked(ob) != 0;
+            }
 
             throw new NotSupportedException("Requires Python 3.9");
         }
@@ -1741,7 +1790,7 @@ namespace Python.Runtime
         internal static nint PyGC_Collect() => Delegates.PyGC_Collect();
         internal static void Py_CLEAR(BorrowedReference ob, int offset) => ReplaceReference(ob, offset, default);
         internal static void Py_CLEAR<T>(ref T? ob)
-            where T: PyObject
+            where T : PyObject
         {
             ob?.Dispose();
             ob = null;

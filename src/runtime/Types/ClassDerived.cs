@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -69,7 +68,7 @@ namespace Python.Runtime
             // Python derived types rely on base tp_new and overridden __init__
         }
 
-        public new static void tp_dealloc(NewReference ob)
+        public static new void tp_dealloc(NewReference ob)
         {
             var self = (CLRObject?)GetManagedObject(ob.Borrow());
 
@@ -93,7 +92,7 @@ namespace Python.Runtime
         /// <summary>
         /// No-op clear. Real cleanup happens in <seealso cref="Finalize(IntPtr)"/>
         /// </summary>
-        public new static int tp_clear(BorrowedReference ob) => 0;
+        public static new int tp_clear(BorrowedReference ob) => 0;
 
         /// <summary>
         /// Called from Converter.ToPython for types that are python subclasses of managed types.
@@ -165,8 +164,10 @@ namespace Python.Runtime
 
             Type baseClass = baseType;
             var interfaces = new HashSet<Type> { typeof(IPythonDerivedType) };
-            foreach(var interfaceType in typeInterfaces)
+            foreach (var interfaceType in typeInterfaces)
+            {
                 interfaces.Add(interfaceType);
+            }
 
             // if the base type is an interface then use System.Object as the base class
             // and add the base type to the list of interfaces this new class will implement.
@@ -833,7 +834,10 @@ namespace Python.Runtime
         /// </summary>
         private static PyTuple? MarshalByRefsBack(object?[] args, MethodBase? method, PyObject pyResult, int outsOffset)
         {
-            if (method is null) return null;
+            if (method is null)
+            {
+                return null;
+            }
 
             var parameters = method.GetParameters();
             PyTuple? outs = null;
@@ -858,7 +862,9 @@ namespace Python.Runtime
                 byrefIndex++;
             }
             if (byrefIndex > 0 && outs!.Length() > byrefIndex + outsOffset)
+            {
                 throw new ArgumentException("Too many output parameters");
+            }
 
             return outs;
         }

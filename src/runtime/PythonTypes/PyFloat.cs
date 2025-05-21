@@ -40,7 +40,10 @@ namespace Python.Runtime
 
         private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
 
             if (!IsFloatType(o))
             {
@@ -51,7 +54,10 @@ namespace Python.Runtime
 
         private static StolenReference FromString(string value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             using var s = new PyString(value);
             NewReference val = Runtime.PyFloat_FromString(s.Reference);
@@ -81,7 +87,11 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsFloatType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return Runtime.PyFloat_Check(value.obj);
         }
 
@@ -93,7 +103,10 @@ namespace Python.Runtime
         /// </summary>
         public static PyFloat AsFloat(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             var op = Runtime.PyNumber_Float(value.Reference);
             PythonException.ThrowIfIsNull(op);

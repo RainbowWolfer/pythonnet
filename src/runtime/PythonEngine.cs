@@ -50,9 +50,11 @@ namespace Python.Runtime
         private static void EnsureInitialized()
         {
             if (!IsInitialized)
+            {
                 throw new InvalidOperationException(
                     "Python must be initialized for this operation"
                 );
+            }
         }
 
         /// <summary>Set to <c>true</c> to enable GIL debugging assistance.</summary>
@@ -77,7 +79,9 @@ namespace Python.Runtime
             set
             {
                 if (IsInitialized)
+                {
                     throw new NotSupportedException("Changing interop configuration when engine is running is not supported");
+                }
 
                 interopConfiguration = value ?? throw new ArgumentNullException(nameof(InteropConfiguration));
             }
@@ -273,7 +277,7 @@ namespace Python.Runtime
             ImportHook.UpdateCLRModuleDict();
         }
 
-        static BorrowedReference DefineModule(string name)
+        private static BorrowedReference DefineModule(string name)
         {
             var module = Runtime.PyImport_AddModule(name);
             var module_globals = Runtime.PyModule_GetDict(module);
@@ -282,7 +286,7 @@ namespace Python.Runtime
             return module;
         }
 
-        static void LoadSubmodule(BorrowedReference targetModuleDict, string fullName, string resourceName)
+        private static void LoadSubmodule(BorrowedReference targetModuleDict, string fullName, string resourceName)
         {
             string? memberName = fullName.AfterLast('.');
             Debug.Assert(memberName != null);
@@ -297,7 +301,7 @@ namespace Python.Runtime
             Runtime.PyDict_SetItemString(targetModuleDict, memberName!, module);
         }
 
-        static void LoadMixins(BorrowedReference targetModuleDict)
+        private static void LoadMixins(BorrowedReference targetModuleDict)
         {
             foreach (string nested in new[] { "collections" })
             {
@@ -307,12 +311,12 @@ namespace Python.Runtime
             }
         }
 
-        static void OnDomainUnload(object _, EventArgs __)
+        private static void OnDomainUnload(object _, EventArgs __)
         {
             Shutdown();
         }
 
-        static void OnProcessExit(object _, EventArgs __)
+        private static void OnProcessExit(object _, EventArgs __)
         {
             Runtime.ProcessIsTerminating = true;
             Shutdown();
@@ -405,7 +409,7 @@ namespace Python.Runtime
         /// </summary>
         public delegate void ShutdownHandler();
 
-        static readonly List<ShutdownHandler> ShutdownHandlers = new();
+        private static readonly List<ShutdownHandler> ShutdownHandlers = new();
 
         /// <summary>
         /// Add a function to be called when the engine is shut down.
@@ -450,9 +454,9 @@ namespace Python.Runtime
         ///
         /// They're run in opposite order they were added.
         /// </summary>
-        static void ExecuteShutdownHandlers()
+        private static void ExecuteShutdownHandlers()
         {
-            while(ShutdownHandlers.Count > 0)
+            while (ShutdownHandlers.Count > 0)
             {
                 var handler = ShutdownHandlers[ShutdownHandlers.Count - 1];
                 ShutdownHandlers.RemoveAt(ShutdownHandlers.Count - 1);
@@ -626,7 +630,10 @@ namespace Python.Runtime
         /// </remarks>
         internal static PyObject RunString(string code, BorrowedReference globals, BorrowedReference locals, RunFlagType flag)
         {
-            if (code is null) throw new ArgumentNullException(nameof(code));
+            if (code is null)
+            {
+                throw new ArgumentNullException(nameof(code));
+            }
 
             NewReference tempGlobals = default;
             if (globals.IsNull)

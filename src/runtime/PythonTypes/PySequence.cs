@@ -23,10 +23,18 @@ namespace Python.Runtime
         /// <exception cref="ArgumentException"><paramref name="o"/> does not provide sequence protocol</exception>
         public PySequence(PyObject o) : base(FromObject(o)) { }
 
-        static BorrowedReference FromObject(PyObject o)
+        private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
-            if (!IsSequenceType(o)) throw new ArgumentException("object is not a sequence");
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            if (!IsSequenceType(o))
+            {
+                throw new ArgumentException("object is not a sequence");
+            }
+
             return o.Reference;
         }
 
@@ -35,7 +43,10 @@ namespace Python.Runtime
         /// </summary>
         public static bool IsSequenceType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             return Runtime.PySequence_Check(value.obj);
         }
@@ -56,7 +67,10 @@ namespace Python.Runtime
         /// </summary>
         public void SetSlice(int i1, int i2, PyObject v)
         {
-            if (v is null) throw new ArgumentNullException(nameof(v));
+            if (v is null)
+            {
+                throw new ArgumentNullException(nameof(v));
+            }
 
             int r = Runtime.PySequence_SetSlice(obj, i1, i2, v.obj);
             if (r < 0)
@@ -88,7 +102,10 @@ namespace Python.Runtime
         /// </summary>
         public nint Index(PyObject item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             nint r = Runtime.PySequence_Index(obj, item.obj);
             if (r < 0)
@@ -117,7 +134,10 @@ namespace Python.Runtime
         /// </summary>
         public bool Contains(PyObject item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             int r = Runtime.PySequence_Contains(obj, item.obj);
             if (r < 0)
@@ -134,7 +154,10 @@ namespace Python.Runtime
         /// </summary>
         public PyObject Concat(PyObject other)
         {
-            if (other is null) throw new ArgumentNullException(nameof(other));
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
 
             using var op = Runtime.PySequence_Concat(obj, other.obj);
             PythonException.ThrowIfIsNull(op);

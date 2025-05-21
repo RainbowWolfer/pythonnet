@@ -2,7 +2,6 @@ namespace Python.Runtime
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
@@ -15,8 +14,8 @@ namespace Python.Runtime
     /// </summary>
     public static class PyObjectConversions
     {
-        static readonly DecoderGroup decoders = new();
-        static readonly EncoderGroup encoders = new();
+        private static readonly DecoderGroup decoders = new();
+        private static readonly EncoderGroup encoders = new();
 
         /// <summary>
         /// Registers specified encoder (marshaller)
@@ -24,7 +23,10 @@ namespace Python.Runtime
         /// </summary>
         public static void RegisterEncoder(IPyObjectEncoder encoder)
         {
-            if (encoder == null) throw new ArgumentNullException(nameof(encoder));
+            if (encoder == null)
+            {
+                throw new ArgumentNullException(nameof(encoder));
+            }
 
             lock (encoders)
             {
@@ -38,7 +40,10 @@ namespace Python.Runtime
         /// </summary>
         public static void RegisterDecoder(IPyObjectDecoder decoder)
         {
-            if (decoder == null) throw new ArgumentNullException(nameof(decoder));
+            if (decoder == null)
+            {
+                throw new ArgumentNullException(nameof(decoder));
+            }
 
             lock (decoders)
             {
@@ -49,21 +54,31 @@ namespace Python.Runtime
         #region Encoding
         internal static PyObject? TryEncode(object obj, Type type)
         {
-            if (obj == null) throw new ArgumentNullException(nameof(obj));
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             foreach (var encoder in clrToPython.GetOrAdd(type, GetEncoders))
             {
                 var result = encoder.TryEncode(obj);
-                if (result != null) return result;
+                if (result != null)
+                {
+                    return result;
+                }
             }
 
             return null;
         }
 
-        static readonly ConcurrentDictionary<Type, IPyObjectEncoder[]>
+        private static readonly ConcurrentDictionary<Type, IPyObjectEncoder[]>
             clrToPython = new();
-        static IPyObjectEncoder[] GetEncoders(Type type)
+        private static IPyObjectEncoder[] GetEncoders(Type type)
         {
             lock (encoders)
             {
@@ -73,21 +88,36 @@ namespace Python.Runtime
         #endregion
 
         #region Decoding
-        static readonly ConcurrentDictionary<TypePair, (PyType, Converter.TryConvertFromPythonDelegate?)> pythonToClr = new();
+        private static readonly ConcurrentDictionary<TypePair, (PyType, Converter.TryConvertFromPythonDelegate?)> pythonToClr = new();
         internal static bool TryDecode(BorrowedReference pyHandle, BorrowedReference pyType, Type targetType, out object? result)
         {
-            if (pyHandle == null) throw new ArgumentNullException(nameof(pyHandle));
-            if (pyType == null) throw new ArgumentNullException(nameof(pyType));
-            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
+            if (pyHandle == null)
+            {
+                throw new ArgumentNullException(nameof(pyHandle));
+            }
+
+            if (pyType == null)
+            {
+                throw new ArgumentNullException(nameof(pyType));
+            }
+
+            if (targetType == null)
+            {
+                throw new ArgumentNullException(nameof(targetType));
+            }
 
             var key = new TypePair(pyType.DangerousGetAddress(), targetType);
             var (_, decoder) = pythonToClr.GetOrAdd(key, pair => GetDecoder(pair.PyType, pair.ClrType));
             result = null;
-            if (decoder == null) return false;
+            if (decoder == null)
+            {
+                return false;
+            }
+
             return decoder.Invoke(pyHandle, out result);
         }
 
-        static (PyType, Converter.TryConvertFromPythonDelegate?) GetDecoder(IntPtr sourceType, Type targetType)
+        private static (PyType, Converter.TryConvertFromPythonDelegate?) GetDecoder(IntPtr sourceType, Type targetType)
         {
             var sourceTypeRef = new BorrowedReference(sourceType);
             Debug.Assert(PyType.IsType(sourceTypeRef));
@@ -97,7 +127,10 @@ namespace Python.Runtime
             lock (decoders)
             {
                 decoder = decoders.GetDecoder(pyType, targetType);
-                if (decoder == null) return default;
+                if (decoder == null)
+                {
+                    return default;
+                }
             }
 
             var decode = genericDecode.MakeGenericMethod(targetType)!;
@@ -121,7 +154,7 @@ namespace Python.Runtime
             return (pyType, TryDecode);
         }
 
-        static readonly MethodInfo genericDecode = typeof(IPyObjectDecoder).GetMethod(nameof(IPyObjectDecoder.TryDecode));
+        private static readonly MethodInfo genericDecode = typeof(IPyObjectDecoder).GetMethod(nameof(IPyObjectDecoder.TryDecode));
 
         #endregion
 
@@ -137,7 +170,7 @@ namespace Python.Runtime
                 }
         }
 
-        struct TypePair : IEquatable<TypePair>
+        private struct TypePair : IEquatable<TypePair>
         {
             internal readonly IntPtr PyType;
             internal readonly Type ClrType;

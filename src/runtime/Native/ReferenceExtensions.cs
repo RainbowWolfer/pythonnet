@@ -2,7 +2,7 @@ namespace Python.Runtime
 {
     using System.Diagnostics.Contracts;
 
-    static class ReferenceExtensions
+    internal static class ReferenceExtensions
     {
         /// <summary>
         /// Checks if the reference points to Python object <c>None</c>.

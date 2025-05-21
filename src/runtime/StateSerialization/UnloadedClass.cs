@@ -5,7 +5,7 @@ namespace Python.Runtime;
 [Serializable]
 internal class UnloadedClass : ClassBase
 {
-    readonly string name;
+    private readonly string name;
 
     internal UnloadedClass(string name) : base(typeof(object))
     {

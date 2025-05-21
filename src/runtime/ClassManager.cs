@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security;
 
 using Python.Runtime.StateSerialization;
@@ -85,7 +84,7 @@ namespace Python.Runtime
                 foreach (var member in cb.dotNetMembers)
                 {
                     if ((Runtime.PyDict_DelItemString(dict.Borrow(), member) == -1) &&
-                        (Exceptions.ExceptionMatches(Exceptions.KeyError)))
+                        Exceptions.ExceptionMatches(Exceptions.KeyError))
                     {
                         // Trying to remove a key that's not in the dictionary
                         // raises an error. We don't care about it.
@@ -291,40 +290,48 @@ namespace Python.Runtime
 
         internal static bool ShouldBindMethod(MethodBase mb)
         {
-            if (mb is null) throw new ArgumentNullException(nameof(mb));
-            return (mb.IsPublic || mb.IsFamily || mb.IsFamilyOrAssembly);
+            if (mb is null)
+            {
+                throw new ArgumentNullException(nameof(mb));
+            }
+
+            return mb.IsPublic || mb.IsFamily || mb.IsFamilyOrAssembly;
         }
 
         internal static bool ShouldBindField(FieldInfo fi)
         {
-            if (fi is null) throw new ArgumentNullException(nameof(fi));
-            return (fi.IsPublic || fi.IsFamily || fi.IsFamilyOrAssembly);
+            if (fi is null)
+            {
+                throw new ArgumentNullException(nameof(fi));
+            }
+
+            return fi.IsPublic || fi.IsFamily || fi.IsFamilyOrAssembly;
         }
 
         internal static bool ShouldBindProperty(PropertyInfo pi)
         {
-                MethodInfo? mm;
-                try
-                {
-                    mm = pi.GetGetMethod(true);
-                    if (mm == null)
-                    {
-                        mm = pi.GetSetMethod(true);
-                    }
-                }
-                catch (SecurityException)
-                {
-                    // GetGetMethod may try to get a method protected by
-                    // StrongNameIdentityPermission - effectively private.
-                    return false;
-                }
-
+            MethodInfo? mm;
+            try
+            {
+                mm = pi.GetGetMethod(true);
                 if (mm == null)
                 {
-                    return false;
+                    mm = pi.GetSetMethod(true);
                 }
+            }
+            catch (SecurityException)
+            {
+                // GetGetMethod may try to get a method protected by
+                // StrongNameIdentityPermission - effectively private.
+                return false;
+            }
 
-                return ShouldBindMethod(mm);
+            if (mm == null)
+            {
+                return false;
+            }
+
+            return ShouldBindMethod(mm);
         }
 
         internal static bool ShouldBindEvent(EventInfo ei)
@@ -431,7 +438,7 @@ namespace Python.Runtime
 
             for (i = 0; i < items.Count; i++)
             {
-                var mi = (MemberInfo)items[i];
+                var mi = items[i];
 
                 switch (mi.MemberType)
                 {
@@ -445,7 +452,9 @@ namespace Python.Runtime
 
                         //TODO mangle?
                         if (name == "__init__" && !impl.HasCustomNew())
+                        {
                             continue;
+                        }
 
                         if (!methods.TryGetValue(name, out var methodList))
                         {
@@ -472,7 +481,7 @@ namespace Python.Runtime
                     case MemberTypes.Property:
                         var pi = (PropertyInfo)mi;
 
-                        if(!ShouldBindProperty(pi))
+                        if (!ShouldBindProperty(pi))
                         {
                             continue;
                         }
@@ -561,10 +570,14 @@ namespace Python.Runtime
                     OperatorMethod.FilterMethods(mlist, out var forwardMethods, out var reverseMethods);
                     // Only methods where the left operand is the declaring type.
                     if (forwardMethods.Length > 0)
+                    {
                         ci.members[pyName] = new MethodObject(type, name, forwardMethods).AllocObject();
+                    }
                     // Only methods where only the right operand is the declaring type.
                     if (reverseMethods.Length > 0)
+                    {
                         ci.members[pyNameReverse] = new MethodObject(type, name, reverseMethods, argsReversed: true).AllocObject();
+                    }
                 }
             }
 
@@ -574,7 +587,8 @@ namespace Python.Runtime
                 var parent = type.BaseType;
                 while (parent != null && ci.indexer == null)
                 {
-                    foreach (var prop in parent.GetProperties()) {
+                    foreach (var prop in parent.GetProperties())
+                    {
                         var args = prop.GetIndexParameters();
                         if (args.GetLength(0) > 0)
                         {

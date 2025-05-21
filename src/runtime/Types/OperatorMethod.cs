@@ -125,7 +125,7 @@ namespace Python.Runtime
             }
         }
 
-        static IEnumerable<MethodInfo> GetOperatorCandidates(Type clrType)
+        private static IEnumerable<MethodInfo> GetOperatorCandidates(Type clrType)
         {
             const BindingFlags flags = BindingFlags.Public | BindingFlags.Static;
             if (clrType.IsEnum)
@@ -142,7 +142,8 @@ namespace Python.Runtime
             if (OpMethodMap.ContainsKey(clrName))
             {
                 return OpMethodMap[clrName].MethodName;
-            } else
+            }
+            else
             {
                 return ComparisonOpMap[clrName];
             }

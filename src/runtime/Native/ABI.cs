@@ -5,7 +5,7 @@ namespace Python.Runtime.Native
     using System.Linq;
     using System.Reflection;
 
-    static class ABI
+    internal static class ABI
     {
         public static int RefCountOffset { get; } = GetRefCountOffset();
         public static int ObjectHeadOffset => RefCountOffset;
@@ -34,16 +34,18 @@ namespace Python.Runtime.Native
             TypeOffset.Use(typeOffsets, nativeOffsetsClass == null ? ObjectHeadOffset : 0);
         }
 
-        static unsafe int GetRefCountOffset()
+        private static unsafe int GetRefCountOffset()
         {
             using var tempObject = Runtime.PyList_New(0);
             IntPtr* tempPtr = (IntPtr*)tempObject.DangerousGetAddress();
             int offset = 0;
-            while(tempPtr[offset] != (IntPtr)1)
+            while (tempPtr[offset] != (IntPtr)1)
             {
                 offset++;
                 if (offset > 100)
+                {
                     throw new InvalidProgramException("PyObject_HEAD could not be found withing reasonable distance from the start of PyObject");
+                }
             }
             return offset * IntPtr.Size;
         }

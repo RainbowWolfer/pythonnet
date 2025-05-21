@@ -8,16 +8,20 @@ namespace Python.Runtime.Codecs
     /// <summary>
     /// Represents a group of <see cref="IPyObjectDecoder"/>s. Useful to group them by priority.
     /// </summary>
-    public sealed class EncoderGroup: IPyObjectEncoder, IEnumerable<IPyObjectEncoder>, IDisposable
+    public sealed class EncoderGroup : IPyObjectEncoder, IEnumerable<IPyObjectEncoder>, IDisposable
     {
-        readonly List<IPyObjectEncoder> encoders = new();
+        private readonly List<IPyObjectEncoder> encoders = new();
 
         /// <summary>
         /// Add specified encoder to the group
         /// </summary>
         public void Add(IPyObjectEncoder item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
             this.encoders.Add(item);
         }
         /// <summary>
@@ -30,7 +34,10 @@ namespace Python.Runtime.Codecs
         /// <inheritdoc />
         public PyObject? TryEncode(object value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             foreach (var encoder in this.GetEncoders(value.GetType()))
             {
@@ -67,16 +74,22 @@ namespace Python.Runtime.Codecs
         /// </summary>
         public static IEnumerable<IPyObjectEncoder> GetEncoders(this IPyObjectEncoder decoder, Type type)
         {
-            if (decoder is null) throw new ArgumentNullException(nameof(decoder));
+            if (decoder is null)
+            {
+                throw new ArgumentNullException(nameof(decoder));
+            }
 
             if (decoder is IEnumerable<IPyObjectEncoder> composite)
             {
                 foreach (var nestedEncoder in composite)
-                foreach (var match in nestedEncoder.GetEncoders(type))
                 {
-                    yield return match;
+                    foreach (var match in nestedEncoder.GetEncoders(type))
+                    {
+                        yield return match;
+                    }
                 }
-            } else if (decoder.CanEncode(type))
+            }
+            else if (decoder.CanEncode(type))
             {
                 yield return decoder;
             }

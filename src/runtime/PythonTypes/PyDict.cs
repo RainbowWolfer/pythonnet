@@ -46,7 +46,11 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsDictType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return Runtime.PyDict_Check(value.obj);
         }
 
@@ -59,7 +63,11 @@ namespace Python.Runtime
         /// </remarks>
         public bool HasKey(PyObject key)
         {
-            if (key is null) throw new ArgumentNullException(nameof(key));
+            if (key is null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             return Runtime.PyMapping_HasKey(obj, key.obj) != 0;
         }
 
@@ -149,7 +157,10 @@ namespace Python.Runtime
         /// </remarks>
         public void Update(PyObject other)
         {
-            if (other is null) throw new ArgumentNullException(nameof(other));
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
 
             int result = Runtime.PyDict_Update(Reference, other.Reference);
             if (result < 0)
@@ -174,9 +185,21 @@ namespace Python.Runtime
 
         public override bool Equals(PyObject? other)
         {
-            if (other is null) return false;
-            if (obj == other.obj) return true;
-            if (other is PyDict || IsDictType(other)) return base.Equals(other);
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (obj == other.obj)
+            {
+                return true;
+            }
+
+            if (other is PyDict || IsDictType(other))
+            {
+                return base.Equals(other);
+            }
+
             return false;
         }
     }

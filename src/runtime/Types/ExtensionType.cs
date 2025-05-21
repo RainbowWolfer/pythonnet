@@ -44,7 +44,7 @@ namespace Python.Runtime
 
         // "borrowed" references
         internal static readonly HashSet<IntPtr> loadedExtensions = new();
-        void SetupGc (BorrowedReference ob, BorrowedReference tp)
+        private void SetupGc(BorrowedReference ob, BorrowedReference tp)
         {
             GCHandle gc = GCHandle.Alloc(this);
             InitGCHandle(ob, tp, gc);
@@ -74,7 +74,7 @@ namespace Python.Runtime
             return -1;
         }
 
-        public unsafe static void tp_dealloc(NewReference lastRef)
+        public static unsafe void tp_dealloc(NewReference lastRef)
         {
             Runtime.PyObject_GC_UnTrack(lastRef.Borrow());
 

@@ -9,26 +9,37 @@ namespace Python.Runtime
         public IEnumerable<PyType> GetBaseTypes(Type type, IList<PyType> existingBases)
         {
             if (type is null)
+            {
                 throw new ArgumentNullException(nameof(type));
+            }
+
             if (existingBases is null)
+            {
                 throw new ArgumentNullException(nameof(existingBases));
+            }
+
             if (existingBases.Count > 0)
+            {
                 throw new ArgumentException("To avoid confusion, this type provider requires the initial set of base types to be empty");
+            }
 
             return new[] { new PyType(GetBaseType(type)) };
         }
 
-        static BorrowedReference GetBaseType(Type type)
+        private static BorrowedReference GetBaseType(Type type)
         {
             if (type == typeof(Exception))
+            {
                 return Exceptions.Exception;
+            }
 
             return type.BaseType is not null
                 ? ClassManager.GetClass(type.BaseType)
                 : Runtime.PyBaseObjectType;
         }
 
-        DefaultBaseTypeProvider(){}
+        private DefaultBaseTypeProvider()
+        { }
         public static DefaultBaseTypeProvider Instance { get; } = new DefaultBaseTypeProvider();
     }
 }

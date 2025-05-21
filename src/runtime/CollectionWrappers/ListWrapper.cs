@@ -23,7 +23,9 @@ namespace Python.Runtime.CollectionWrappers
                 var pyItem = value.ToPython();
                 var result = Runtime.PyList_SetItem(pyObject, index, new NewReference(pyItem).Steal());
                 if (result == -1)
+                {
                     Runtime.CheckExceptionOccurred();
+                }
             }
         }
 
@@ -35,13 +37,17 @@ namespace Python.Runtime.CollectionWrappers
         public void Insert(int index, T item)
         {
             if (IsReadOnly)
+            {
                 throw new InvalidOperationException("Collection is read-only");
+            }
 
             var pyItem = item.ToPython();
 
             int result = Runtime.PyList_Insert(pyObject, index, pyItem);
             if (result == -1)
+            {
                 Runtime.CheckExceptionOccurred();
+            }
         }
 
         public void RemoveAt(int index)
@@ -51,7 +57,9 @@ namespace Python.Runtime.CollectionWrappers
             //PySequence_DelItem will set an error if it fails.  throw it here
             //since RemoveAt does not have a bool return value.
             if (result == false)
+            {
                 Runtime.CheckExceptionOccurred();
+            }
         }
     }
 }

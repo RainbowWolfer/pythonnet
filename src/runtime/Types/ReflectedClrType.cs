@@ -13,7 +13,7 @@ internal sealed class ReflectedClrType : PyType
     private ReflectedClrType(StolenReference reference) : base(reference, prevalidated: true) { }
     internal ReflectedClrType(ReflectedClrType original) : base(original, prevalidated: true) { }
     internal ReflectedClrType(BorrowedReference original) : base(original) { }
-    ReflectedClrType(SerializationInfo info, StreamingContext context) : base(info, context) { }
+    private ReflectedClrType(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
     internal ClassBase Impl => (ClassBase)ManagedType.GetManagedObject(this)!;
 
@@ -110,7 +110,7 @@ internal sealed class ReflectedClrType : PyType
         }
     }
 
-    static ReflectedClrType AllocateClass(Type clrType)
+    private static ReflectedClrType AllocateClass(Type clrType)
     {
         string name = TypeManager.GetPythonTypeName(clrType);
 

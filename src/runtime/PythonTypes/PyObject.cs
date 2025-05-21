@@ -30,10 +30,10 @@ namespace Python.Runtime
         protected IntPtr rawPtr = IntPtr.Zero;
         internal readonly int run = Runtime.GetRun();
 
-        internal BorrowedReference obj => new (rawPtr);
+        internal BorrowedReference obj => new(rawPtr);
 
-        public static PyObject None => new (Runtime.PyNone);
-        internal BorrowedReference Reference => new (rawPtr);
+        public static PyObject None => new(Runtime.PyNone);
+        internal BorrowedReference Reference => new(rawPtr);
 
         /// <summary>
         /// PyObject Constructor
@@ -47,7 +47,10 @@ namespace Python.Runtime
         [Obsolete]
         internal PyObject(IntPtr ptr)
         {
-            if (ptr == IntPtr.Zero) throw new ArgumentNullException(nameof(ptr));
+            if (ptr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(ptr));
+            }
 
             rawPtr = ptr;
             Finalizer.Instance.ThrottledCollect();
@@ -56,11 +59,16 @@ namespace Python.Runtime
         [Obsolete("for testing purposes only")]
         internal PyObject(IntPtr ptr, bool skipCollect)
         {
-            if (ptr == IntPtr.Zero) throw new ArgumentNullException(nameof(ptr));
+            if (ptr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(ptr));
+            }
 
             rawPtr = ptr;
             if (!skipCollect)
+            {
                 Finalizer.Instance.ThrottledCollect();
+            }
         }
 
         /// <summary>
@@ -70,7 +78,10 @@ namespace Python.Runtime
         /// </summary>
         internal PyObject(BorrowedReference reference)
         {
-            if (reference.IsNull) throw new ArgumentNullException(nameof(reference));
+            if (reference.IsNull)
+            {
+                throw new ArgumentNullException(nameof(reference));
+            }
 
             rawPtr = new NewReference(reference).DangerousMoveToPointer();
             Finalizer.Instance.ThrottledCollect();
@@ -78,16 +89,24 @@ namespace Python.Runtime
 
         internal PyObject(BorrowedReference reference, bool skipCollect)
         {
-            if (reference.IsNull) throw new ArgumentNullException(nameof(reference));
+            if (reference.IsNull)
+            {
+                throw new ArgumentNullException(nameof(reference));
+            }
 
             rawPtr = new NewReference(reference).DangerousMoveToPointer();
             if (!skipCollect)
+            {
                 Finalizer.Instance.ThrottledCollect();
+            }
         }
 
         internal PyObject(in StolenReference reference)
         {
-            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            if (reference == null)
+            {
+                throw new ArgumentNullException(nameof(reference));
+            }
 
             rawPtr = reference.DangerousGetAddressOrNull();
             Finalizer.Instance.ThrottledCollect();
@@ -179,9 +198,12 @@ namespace Python.Runtime
 
         internal bool IsDisposed => rawPtr == IntPtr.Zero;
 
-        void CheckDisposed()
+        private void CheckDisposed()
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(PyObject));
+            if (IsDisposed)
+            {
+                throw new ObjectDisposedException(nameof(PyObject));
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -235,7 +257,7 @@ namespace Python.Runtime
         {
             GC.SuppressFinalize(this);
             Dispose(true);
-            
+
         }
 
         internal StolenReference Steal()
@@ -257,7 +279,9 @@ namespace Python.Runtime
         internal void CheckRun()
         {
             if (run != Runtime.GetRun())
+            {
                 throw new RuntimeShutdownException(rawPtr);
+            }
         }
 
         internal BorrowedReference GetPythonTypeReference()
@@ -286,7 +310,10 @@ namespace Python.Runtime
         /// </remarks>
         public bool TypeCheck(PyType typeOrClass)
         {
-            if (typeOrClass == null) throw new ArgumentNullException(nameof(typeOrClass));
+            if (typeOrClass == null)
+            {
+                throw new ArgumentNullException(nameof(typeOrClass));
+            }
 
             return Runtime.PyObject_TypeCheck(obj, typeOrClass.obj);
         }
@@ -302,7 +329,10 @@ namespace Python.Runtime
         /// </remarks>
         public bool HasAttr(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             return Runtime.PyObject_HasAttrString(Reference, name) != 0;
         }
@@ -317,7 +347,10 @@ namespace Python.Runtime
         /// </remarks>
         public bool HasAttr(PyObject name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             return Runtime.PyObject_HasAttr(Reference, name.Reference) != 0;
         }
@@ -332,7 +365,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject GetAttr(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             using var op = Runtime.PyObject_GetAttrString(obj, name);
             return new PyObject(op.StealOrThrow());
@@ -356,7 +392,10 @@ namespace Python.Runtime
         [Obsolete("See remarks")]
         public PyObject GetAttr(string name, PyObject _default)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             using var op = Runtime.PyObject_GetAttrString(obj, name);
             if (op.IsNull())
@@ -385,7 +424,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject GetAttr(PyObject name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             using var op = Runtime.PyObject_GetAttr(obj, name.obj);
             return new PyObject(op.StealOrThrow());
@@ -409,7 +451,10 @@ namespace Python.Runtime
         [Obsolete("See remarks")]
         public PyObject GetAttr(PyObject name, PyObject _default)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             using var op = Runtime.PyObject_GetAttr(obj, name.obj);
             if (op.IsNull())
@@ -437,8 +482,15 @@ namespace Python.Runtime
         /// </remarks>
         public void SetAttr(string name, PyObject value)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             int r = Runtime.PyObject_SetAttrString(obj, name, value.obj);
             if (r < 0)
@@ -458,8 +510,15 @@ namespace Python.Runtime
         /// </remarks>
         public void SetAttr(PyObject name, PyObject value)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             int r = Runtime.PyObject_SetAttr(obj, name.obj, value.obj);
             if (r < 0)
@@ -478,7 +537,10 @@ namespace Python.Runtime
         /// </remarks>
         public void DelAttr(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             int r = Runtime.PyObject_DelAttrString(obj, name);
             if (r < 0)
@@ -498,7 +560,10 @@ namespace Python.Runtime
         /// </remarks>
         public void DelAttr(PyObject name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             int r = Runtime.PyObject_DelAttr(obj, name.obj);
             if (r < 0)
@@ -518,7 +583,10 @@ namespace Python.Runtime
         /// </remarks>
         public virtual PyObject GetItem(PyObject key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             using var op = Runtime.PyObject_GetItem(obj, key.obj);
             if (op.IsNull())
@@ -539,7 +607,10 @@ namespace Python.Runtime
         /// </remarks>
         public virtual PyObject GetItem(string key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             using var pyKey = new PyString(key);
             return GetItem(pyKey);
@@ -571,8 +642,15 @@ namespace Python.Runtime
         /// </remarks>
         public virtual void SetItem(PyObject key, PyObject value)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             int r = Runtime.PyObject_SetItem(obj, key.obj, value.obj);
             if (r < 0)
@@ -592,8 +670,15 @@ namespace Python.Runtime
         /// </remarks>
         public virtual void SetItem(string key, PyObject value)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             using var pyKey = new PyString(key);
             SetItem(pyKey, value);
@@ -610,7 +695,10 @@ namespace Python.Runtime
         /// </remarks>
         public virtual void SetItem(int index, PyObject value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             using var pyindex = new PyInt(index);
             SetItem(pyindex, value);
@@ -627,7 +715,10 @@ namespace Python.Runtime
         /// </remarks>
         public virtual void DelItem(PyObject key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             int r = Runtime.PyObject_DelItem(obj, key.obj);
             if (r < 0)
@@ -647,7 +738,10 @@ namespace Python.Runtime
         /// </remarks>
         public virtual void DelItem(string key)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             using var pyKey = new PyString(key);
             DelItem(pyKey);
@@ -742,8 +836,15 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Invoke(params PyObject[] args)
         {
-            if (args == null) throw new ArgumentNullException(nameof(args));
-            if (args.Contains(null)) throw new ArgumentNullException();
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            if (args.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
 
             var t = new PyTuple(args);
             using var r = Runtime.PyObject_Call(obj, t.obj, null);
@@ -761,7 +862,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Invoke(PyTuple args)
         {
-            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
 
             using var r = Runtime.PyObject_Call(obj, args.obj, null);
             return new PyObject(r.StealOrThrow());
@@ -777,8 +881,15 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Invoke(PyObject[] args, PyDict? kw)
         {
-            if (args == null) throw new ArgumentNullException(nameof(args));
-            if (args.Contains(null)) throw new ArgumentNullException();
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            if (args.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
 
             using var t = new PyTuple(args);
             using var r = Runtime.PyObject_Call(obj, t.obj, kw is null ? null : kw.obj);
@@ -795,7 +906,10 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Invoke(PyTuple args, PyDict? kw)
         {
-            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
 
             using var r = Runtime.PyObject_Call(obj, args.obj, kw is null ? null : kw.obj);
             return new PyObject(r.StealOrThrow());
@@ -811,9 +925,20 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(string name, params PyObject[] args)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
-            if (args.Contains(null)) throw new ArgumentNullException();
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            if (args.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args);
@@ -831,8 +956,15 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(string name, PyTuple args)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args);
@@ -849,9 +981,20 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(PyObject name, params PyObject[] args)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
-            if (args.Contains(null)) throw new ArgumentNullException();
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            if (args.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args);
@@ -869,8 +1012,15 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(PyObject name, PyTuple args)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args);
@@ -889,9 +1039,20 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(string name, PyObject[] args, PyDict? kw)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
-            if (args.Contains(null)) throw new ArgumentNullException();
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
+            if (args.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args, kw);
@@ -910,8 +1071,15 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject InvokeMethod(string name, PyTuple args, PyDict? kw)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (args == null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
 
             PyObject method = GetAttr(name);
             PyObject result = method.Invoke(args, kw);
@@ -929,7 +1097,10 @@ namespace Python.Runtime
         /// </remarks>
         public bool IsInstance(PyObject typeOrClass)
         {
-            if (typeOrClass == null) throw new ArgumentNullException(nameof(typeOrClass));
+            if (typeOrClass == null)
+            {
+                throw new ArgumentNullException(nameof(typeOrClass));
+            }
 
             int r = Runtime.PyObject_IsInstance(obj, typeOrClass.obj);
             if (r < 0)
@@ -947,14 +1118,20 @@ namespace Python.Runtime
         /// </summary>
         public bool IsSubclass(PyObject typeOrClass)
         {
-            if (typeOrClass == null) throw new ArgumentNullException(nameof(typeOrClass));
+            if (typeOrClass == null)
+            {
+                throw new ArgumentNullException(nameof(typeOrClass));
+            }
 
             return IsSubclass(typeOrClass.Reference);
         }
 
         internal bool IsSubclass(BorrowedReference typeOrClass)
         {
-            if (typeOrClass.IsNull) throw new ArgumentNullException(nameof(typeOrClass));
+            if (typeOrClass.IsNull)
+            {
+                throw new ArgumentNullException(nameof(typeOrClass));
+            }
 
             int r = Runtime.PyObject_IsSubclass(Reference, typeOrClass);
             if (r < 0)
@@ -1051,14 +1228,17 @@ namespace Python.Runtime
             return Runtime.GetManagedString(strval.BorrowOrThrow());
         }
 
-        ManagedType? InternalManagedObject => ManagedType.GetManagedObject(this.Reference);
+        private ManagedType? InternalManagedObject => ManagedType.GetManagedObject(this.Reference);
 
-        string? DebuggerDisplay
+        private string? DebuggerDisplay
         {
             get
             {
                 if (DebugUtil.HaveInterpreterLock())
+                {
                     return this.ToString();
+                }
+
                 var obj = this.InternalManagedObject;
                 return obj is { }
                     ? obj.ToString()
@@ -1082,14 +1262,21 @@ namespace Python.Runtime
 
         public virtual bool Equals(PyObject? other)
         {
-            if (other is null) return false;
+            if (other is null)
+            {
+                return false;
+            }
 
             if (obj == other.obj)
             {
                 return true;
             }
             int result = Runtime.PyObject_RichCompareBool(obj, other.obj, Runtime.Py_EQ);
-            if (result < 0) throw PythonException.ThrowLastAsClrException();
+            if (result < 0)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             return result != 0;
         }
 
@@ -1141,7 +1328,10 @@ namespace Python.Runtime
             int greater = Runtime.PyObject_RichCompareBool(this.Reference, other, Runtime.Py_GT);
             Debug.Assert(greater != -1);
             if (greater > 0)
+            {
                 return 1;
+            }
+
             int less = Runtime.PyObject_RichCompareBool(this.Reference, other, Runtime.Py_LT);
             Debug.Assert(less != -1);
             return less > 0 ? -1 : 0;
@@ -1196,7 +1386,7 @@ namespace Python.Runtime
             for (int i = 0; i < namedArgumentCount; ++i)
             {
                 namedArgs[i * 2] = callInfo.ArgumentNames[i];
-                namedArgs[i * 2 + 1] = inargs[regularArgumentCount + i];
+                namedArgs[(i * 2) + 1] = inargs[regularArgumentCount + i];
             }
             kwargs = Py.kw(namedArgs);
         }
@@ -1204,7 +1394,7 @@ namespace Python.Runtime
         private void GetArgs(object?[] inargs, out PyTuple args, out PyDict? kwargs)
         {
             int arg_count;
-            for (arg_count = 0; arg_count < inargs.Length && !(inargs[arg_count] is Py.KeywordArguments); ++arg_count)
+            for (arg_count = 0; arg_count < inargs.Length && inargs[arg_count] is not Py.KeywordArguments; ++arg_count)
             {
                 ;
             }
@@ -1451,7 +1641,11 @@ namespace Python.Runtime
 
             using var _ = Py.GIL();
             int result = Runtime.PyObject_RichCompareBool(a.obj, b.obj, Runtime.Py_EQ);
-            if (result < 0) throw PythonException.ThrowLastAsClrException();
+            if (result < 0)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             return result != 0;
         }
 
@@ -1468,7 +1662,11 @@ namespace Python.Runtime
 
             using var _ = Py.GIL();
             int result = Runtime.PyObject_RichCompareBool(a.obj, b.obj, Runtime.Py_NE);
-            if (result < 0) throw PythonException.ThrowLastAsClrException();
+            if (result < 0)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             return result != 0;
         }
 
@@ -1506,17 +1704,29 @@ namespace Python.Runtime
                 case ExpressionType.Not:
                     r = Runtime.PyObject_Not(this.obj);
                     result = r == 1;
-                    if (r == -1) Exceptions.Clear();
+                    if (r == -1)
+                    {
+                        Exceptions.Clear();
+                    }
+
                     return r != -1;
                 case ExpressionType.IsFalse:
                     r = Runtime.PyObject_IsTrue(this.obj);
                     result = r == 0;
-                    if (r == -1) Exceptions.Clear();
+                    if (r == -1)
+                    {
+                        Exceptions.Clear();
+                    }
+
                     return r != -1;
                 case ExpressionType.IsTrue:
                     r = Runtime.PyObject_IsTrue(this.obj);
                     result = r == 1;
-                    if (r == -1) Exceptions.Clear();
+                    if (r == -1)
+                    {
+                        Exceptions.Clear();
+                    }
+
                     return r != -1;
                 case ExpressionType.Decrement:
                 case ExpressionType.Increment:
@@ -1556,7 +1766,10 @@ namespace Python.Runtime
         {
             rawPtr = (IntPtr)info.GetInt64("h");
             run = info.GetInt32("r");
-            if (IsDisposed) GC.SuppressFinalize(this);
+            if (IsDisposed)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
     }
 

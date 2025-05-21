@@ -94,9 +94,9 @@ namespace Python.Runtime
         /// <summary>
         /// Implements __cmp__ for reflected delegate types.
         /// </summary>
-        public new static NewReference tp_richcompare(BorrowedReference ob, BorrowedReference other, int op)
+        public static new NewReference tp_richcompare(BorrowedReference ob, BorrowedReference other, int op)
         {
-            if (op != Runtime.Py_EQ && op != Runtime.Py_NE)
+            if (op is not Runtime.Py_EQ and not Runtime.Py_NE)
             {
                 return new NewReference(Runtime.PyNotImplemented);
             }

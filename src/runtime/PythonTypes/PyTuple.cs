@@ -25,7 +25,10 @@ namespace Python.Runtime
 
         private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
 
             if (!IsTupleType(o))
             {
@@ -63,9 +66,15 @@ namespace Python.Runtime
 
         private static StolenReference FromArray(PyObject[] items)
         {
-            if (items is null) throw new ArgumentNullException(nameof(items));
+            if (items is null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             if (items.Any(item => item is null))
+            {
                 throw new ArgumentException(message: Util.UseNone, paramName: nameof(items));
+            }
 
             int count = items.Length;
             using var val = Runtime.PyTuple_New(count);
@@ -100,7 +109,10 @@ namespace Python.Runtime
         /// </summary>
         public static bool IsTupleType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             return Runtime.PyTuple_Check(value.obj);
         }
@@ -113,7 +125,10 @@ namespace Python.Runtime
         /// <exception cref="PythonException">Raised if the object can not be converted to a tuple.</exception>
         public static PyTuple AsTuple(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             NewReference op = Runtime.PySequence_Tuple(value.Reference);
             PythonException.ThrowIfIsNull(op);

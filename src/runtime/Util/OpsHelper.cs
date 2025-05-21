@@ -6,7 +6,7 @@ using static Python.Runtime.OpsHelper;
 
 namespace Python.Runtime
 {
-    static class OpsHelper
+    internal static class OpsHelper
     {
         public static BindingFlags BindingFlags => BindingFlags.Public | BindingFlags.Static;
 
@@ -35,16 +35,16 @@ namespace Python.Runtime
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal class OpsAttribute: Attribute { }
+    internal class OpsAttribute : Attribute { }
 
     [Ops]
     internal static class FlagEnumOps<T> where T : Enum
     {
-        static readonly Func<T, T, T> and = BinaryOp(Expression.And);
-        static readonly Func<T, T, T> or = BinaryOp(Expression.Or);
-        static readonly Func<T, T, T> xor = BinaryOp(Expression.ExclusiveOr);
+        private static readonly Func<T, T, T> and = BinaryOp(Expression.And);
+        private static readonly Func<T, T, T> or = BinaryOp(Expression.Or);
+        private static readonly Func<T, T, T> xor = BinaryOp(Expression.ExclusiveOr);
 
-        static readonly Func<T, T> invert = UnaryOp(Expression.OnesComplement);
+        private static readonly Func<T, T> invert = UnaryOp(Expression.OnesComplement);
 
 #pragma warning disable IDE1006
         public static T op_BitwiseAnd(T a, T b) => and(a, b);
@@ -53,10 +53,10 @@ namespace Python.Runtime
         public static T op_OnesComplement(T value) => invert(value);
 #pragma warning restore IDE1006
 
-        static Expression FromNumber(Expression number)
+        private static Expression FromNumber(Expression number)
             => Expression.Convert(number, typeof(T));
 
-        static Func<T, T, T> BinaryOp(Func<Expression, Expression, BinaryExpression> op)
+        private static Func<T, T, T> BinaryOp(Func<Expression, Expression, BinaryExpression> op)
         {
             return Binary<T>((a, b) =>
             {
@@ -66,7 +66,7 @@ namespace Python.Runtime
                 return FromNumber(numericResult);
             });
         }
-        static Func<T, T> UnaryOp(Func<Expression, UnaryExpression> op)
+        private static Func<T, T> UnaryOp(Func<Expression, UnaryExpression> op)
         {
             return Unary<T>(value =>
             {

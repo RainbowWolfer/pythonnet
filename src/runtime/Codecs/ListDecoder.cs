@@ -8,7 +8,9 @@ namespace Python.Runtime.Codecs
         private static bool IsList(Type targetType)
         {
             if (!targetType.IsGenericType)
+            {
                 return false;
+            }
 
             return targetType.GetGenericTypeDefinition() == typeof(IList<>);
         }
@@ -30,7 +32,10 @@ namespace Python.Runtime.Codecs
 
         public bool TryDecode<T>(PyObject pyObj, out T value)
         {
-            if (pyObj == null) throw new ArgumentNullException(nameof(pyObj));
+            if (pyObj == null)
+            {
+                throw new ArgumentNullException(nameof(pyObj));
+            }
 
             var elementType = typeof(T).GetGenericArguments()[0];
             Type collectionType = typeof(CollectionWrappers.ListWrapper<>).MakeGenericType(elementType);

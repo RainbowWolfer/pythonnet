@@ -113,7 +113,8 @@ namespace Python.Runtime
         internal NewReference GetName()
         {
             var names = new HashSet<string>(binder.GetMethods().Select(m => m.Name));
-            if (names.Count != 1) {
+            if (names.Count != 1)
+            {
                 Exceptions.SetError(Exceptions.AttributeError, "a method has no name");
                 return default;
             }
@@ -212,7 +213,7 @@ namespace Python.Runtime
             return Runtime.PyString_FromString($"<method '{self.name}'>");
         }
 
-        static bool AllowThreads(MethodBase[] methods)
+        private static bool AllowThreads(MethodBase[] methods)
         {
             bool hasAllowOverload = false, hasForbidOverload = false;
             foreach (var method in methods)
@@ -229,7 +230,9 @@ namespace Python.Runtime
             }
 
             if (hasAllowOverload && hasForbidOverload)
+            {
                 throw new NotImplementedException("All method overloads currently must either allow or forbid Python threads together");
+            }
 
             return !hasForbidOverload;
         }

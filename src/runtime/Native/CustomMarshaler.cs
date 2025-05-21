@@ -156,18 +156,18 @@ namespace Python.Runtime
             }
 
             int totalStrLength = argv.Sum(arg => arg.Length + 1);
-            int memSize = argv.Length * IntPtr.Size + totalStrLength * UcsMarshaler._UCS;
+            int memSize = (argv.Length * IntPtr.Size) + (totalStrLength * UcsMarshaler._UCS);
 
             IntPtr mem = Marshal.AllocHGlobal(memSize);
             try
             {
                 // Preparing array of pointers to strings
-                IntPtr curStrPtr = mem + argv.Length * IntPtr.Size;
+                IntPtr curStrPtr = mem + (argv.Length * IntPtr.Size);
                 for (var i = 0; i < argv.Length; i++)
                 {
                     byte[] bStr = PyEncoding.GetBytes(argv[i] + "\0");
                     Marshal.Copy(bStr, 0, curStrPtr, bStr.Length);
-                    Marshal.WriteIntPtr(mem + i * IntPtr.Size, curStrPtr);
+                    Marshal.WriteIntPtr(mem + (i * IntPtr.Size), curStrPtr);
                     curStrPtr += bStr.Length;
                 }
             }

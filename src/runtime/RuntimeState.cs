@@ -6,7 +6,7 @@ using static Python.Runtime.Runtime;
 
 namespace Python.Runtime
 {
-    class RuntimeState
+    internal class RuntimeState
     {
         public static void Save()
         {
@@ -55,7 +55,11 @@ namespace Python.Runtime
             var modules = PyImport_GetModuleDict();
             using var names = PyDict_Keys(modules);
             nint length = PyList_Size(names.BorrowOrThrow());
-            if (length < 0) throw PythonException.ThrowLastAsClrException();
+            if (length < 0)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             var result = new IntPtr[length];
             for (int i = 0; i < length; i++)
             {

@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace Python.Runtime
 {
@@ -41,7 +40,7 @@ namespace Python.Runtime
 
         internal MethodBinder(MethodInfo mi)
         {
-            list = new List<MaybeMethodBase> { new MaybeMethodBase(mi) };
+            list = new List<MaybeMethodBase> { new(mi) };
         }
 
         public int Count
@@ -396,7 +395,10 @@ namespace Python.Runtime
                 isOperator = isOperator && pynargs == pi.Length - 1;
                 bool isReverse = isOperator && argsReversed;  // Only cast if isOperator.
                 if (isReverse && OperatorMethod.IsComparisonOp((MethodInfo)mi))
+                {
                     continue;  // Comparison operators in Python have no reverse mode.
+                }
+
                 if (!MatchesArgumentCount(pynargs, pi, kwargDict, out bool paramsArray, out ArrayList? defaultArgList, out int kwargsMatched, out int defaultsNeeded) && !isOperator)
                 {
                     continue;
@@ -441,7 +443,10 @@ namespace Python.Runtime
                             }
                             margs = margsTemp;
                         }
-                        else continue;
+                        else
+                        {
+                            continue;
+                        }
                     }
                 }
 
@@ -464,7 +469,9 @@ namespace Python.Runtime
                     {
                         bestCount++;
                         if (bestMatchIndex == -1)
+                        {
                             bestMatchIndex = index;
+                        }
                     }
                 }
 
@@ -539,12 +546,12 @@ namespace Python.Runtime
             return null;
         }
 
-        static AggregateException GetAggregateException(IEnumerable<MismatchedMethod> mismatchedMethods)
+        private static AggregateException GetAggregateException(IEnumerable<MismatchedMethod> mismatchedMethods)
         {
             return new AggregateException(mismatchedMethods.Select(m => new ArgumentException($"{m.Exception.Message} in method {m.Method}", m.Exception)));
         }
 
-        static BorrowedReference HandleParamsArray(BorrowedReference args, int arrayStart, int pyArgCount, out NewReference tempObject)
+        private static BorrowedReference HandleParamsArray(BorrowedReference args, int arrayStart, int pyArgCount, out NewReference tempObject)
         {
             BorrowedReference op;
             tempObject = default;
@@ -588,7 +595,7 @@ namespace Python.Runtime
         /// <param name="defaultArgList">A list of default values for omitted parameters</param>
         /// <param name="outs">Returns number of output parameters</param>
         /// <returns>If successful, an array of .NET arguments that can be passed to the method.  Otherwise null.</returns>
-        static object?[]? TryConvertArguments(ParameterInfo[] pi, bool paramsArray,
+        private static object?[]? TryConvertArguments(ParameterInfo[] pi, bool paramsArray,
             BorrowedReference args, int pyArgCount,
             Dictionary<string, PyObject> kwargDict,
             ArrayList? defaultArgList,
@@ -626,7 +633,7 @@ namespace Python.Runtime
                 }
                 else
                 {
-                    if(arrayStart == paramIndex)
+                    if (arrayStart == paramIndex)
                     {
                         op = HandleParamsArray(args, arrayStart, pyArgCount, out tempObject);
                     }
@@ -662,7 +669,7 @@ namespace Python.Runtime
         /// <param name="arg">Converted argument.</param>
         /// <param name="isOut">Whether the CLR type is passed by reference.</param>
         /// <returns>true on success</returns>
-        static bool TryConvertArgument(BorrowedReference op, Type parameterType,
+        private static bool TryConvertArgument(BorrowedReference op, Type parameterType,
                                        out object? arg, out bool isOut)
         {
             arg = null;
@@ -688,7 +695,7 @@ namespace Python.Runtime
         /// <param name="parameterType">The parameter's managed type.</param>
         /// <param name="argument">Pointer to the Python argument object.</param>
         /// <returns>null if conversion is not possible</returns>
-        static Type? TryComputeClrArgumentType(Type parameterType, BorrowedReference argument)
+        private static Type? TryComputeClrArgumentType(Type parameterType, BorrowedReference argument)
         {
             // this logic below handles cases when multiple overloading methods
             // are ambiguous, hence comparison between Python and CLR types
@@ -757,7 +764,7 @@ namespace Python.Runtime
         /// <param name="kwargsMatched">Number of kwargs from Python that are also present in the .NET method.</param>
         /// <param name="defaultsNeeded">Number of non-null defaultsArgs.</param>
         /// <returns></returns>
-        static bool MatchesArgumentCount(int positionalArgumentCount, ParameterInfo[] parameters,
+        private static bool MatchesArgumentCount(int positionalArgumentCount, ParameterInfo[] parameters,
             Dictionary<string, PyObject> kwargDict,
             out bool paramsArray,
             out ArrayList? defaultArgList,
@@ -799,7 +806,8 @@ namespace Python.Runtime
                         defaultArgList.Add(parameters[v].GetDefaultValue());
                         defaultsNeeded++;
                     }
-                    else if (parameters[v].IsOut) {
+                    else if (parameters[v].IsOut)
+                    {
                         defaultArgList.Add(null);
                     }
                     else if (!paramsArray)
@@ -857,7 +865,9 @@ namespace Python.Runtime
                 }
 
                 if (argIndex + 1 < argCount)
+                {
                     to.Append(", ");
+                }
             }
             to.Append(')');
         }
@@ -1001,11 +1011,15 @@ namespace Python.Runtime
             {
                 // m2's type derives from m1's type, favor m2
                 if (me1.DeclaringType.IsAssignableFrom(me2.DeclaringType))
+                {
                     return 1;
+                }
 
                 // m1's type derives from m2's type, favor m1
                 if (me2.DeclaringType.IsAssignableFrom(me1.DeclaringType))
+                {
                     return -1;
+                }
             }
 
             int p1 = MethodBinder.GetPrecedence(me1);
@@ -1045,7 +1059,7 @@ namespace Python.Runtime
     }
 
 
-    static internal class ParameterInfoExtensions
+    internal static class ParameterInfoExtensions
     {
         public static object? GetDefaultValue(this ParameterInfo parameterInfo)
         {
@@ -1060,11 +1074,17 @@ namespace Python.Runtime
                 // for rules on determining the value to pass to the parameter
                 var type = parameterInfo.ParameterType;
                 if (type == typeof(object))
+                {
                     return Type.Missing;
+                }
                 else if (type.IsValueType)
+                {
                     return Activator.CreateInstance(type);
+                }
                 else
+                {
                     return null;
+                }
             }
         }
     }

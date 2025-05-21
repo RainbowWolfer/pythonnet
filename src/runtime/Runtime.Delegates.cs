@@ -9,7 +9,7 @@ public unsafe partial class Runtime
 {
     internal static class Delegates
     {
-        static readonly ILibraryLoader libraryLoader = LibraryLoader.Instance;
+        private static readonly ILibraryLoader libraryLoader = LibraryLoader.Instance;
 
         static Delegates()
         {
@@ -292,13 +292,17 @@ public unsafe partial class Runtime
             Py_NoSiteFlag = (int*)GetFunctionByName(nameof(Py_NoSiteFlag), GetUnmanagedDll(_PythonDll));
         }
 
-        static global::System.IntPtr GetUnmanagedDll(string? libraryName)
+        private static global::System.IntPtr GetUnmanagedDll(string? libraryName)
         {
-            if (libraryName is null) return IntPtr.Zero;
+            if (libraryName is null)
+            {
+                return IntPtr.Zero;
+            }
+
             return libraryLoader.Load(libraryName);
         }
 
-        static global::System.IntPtr GetFunctionByName(string functionName, global::System.IntPtr libraryHandle)
+        private static global::System.IntPtr GetFunctionByName(string functionName, global::System.IntPtr libraryHandle)
         {
             try
             {

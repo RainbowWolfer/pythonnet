@@ -1,14 +1,13 @@
 using System;
-using System.Text;
 
 namespace Python.Runtime
 {
     using static Runtime;
 
     [Obsolete("Only to be used from within Python")]
-    static class Loader
+    internal static class Loader
     {
-        public unsafe static int Initialize(IntPtr data, int size)
+        public static unsafe int Initialize(IntPtr data, int size)
         {
             try
             {
@@ -37,7 +36,7 @@ namespace Python.Runtime
             return 0;
         }
 
-        public unsafe static int Shutdown(IntPtr data, int size)
+        public static unsafe int Shutdown(IntPtr data, int size)
         {
             try
             {

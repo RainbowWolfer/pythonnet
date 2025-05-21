@@ -75,7 +75,7 @@ namespace Python.Runtime
             }
         }
 
-        static NewReference CreateMultidimensional(Type elementType, long[] dimensions, BorrowedReference shapeTuple, BorrowedReference pyType)
+        private static NewReference CreateMultidimensional(Type elementType, long[] dimensions, BorrowedReference shapeTuple, BorrowedReference pyType)
         {
             for (int dimIndex = 0; dimIndex < dimensions.Length; dimIndex++)
             {
@@ -99,7 +99,7 @@ namespace Python.Runtime
             return NewInstance(elementType, pyType, dimensions);
         }
 
-        static NewReference NewInstance(Type elementType, BorrowedReference arrayPyType, long[] dimensions)
+        private static NewReference NewInstance(Type elementType, BorrowedReference arrayPyType, long[] dimensions)
         {
             for (int dim = 0; dim < dimensions.Length; dim++)
             {
@@ -375,7 +375,7 @@ namespace Python.Runtime
         }
 
         #region Buffer protocol
-        static int GetBuffer(BorrowedReference obj, out Py_buffer buffer, PyBUF flags)
+        private static int GetBuffer(BorrowedReference obj, out Py_buffer buffer, PyBUF flags)
         {
             buffer = default;
 
@@ -430,9 +430,12 @@ namespace Python.Runtime
 
             return 0;
         }
-        static void ReleaseBuffer(BorrowedReference obj, ref Py_buffer buffer)
+        private static void ReleaseBuffer(BorrowedReference obj, ref Py_buffer buffer)
         {
-            if (buffer._internal == IntPtr.Zero) return;
+            if (buffer._internal == IntPtr.Zero)
+            {
+                return;
+            }
 
             UnmanagedFree(ref buffer.shape);
             UnmanagedFree(ref buffer.strides);
@@ -445,7 +448,7 @@ namespace Python.Runtime
             buffer._internal = IntPtr.Zero;
         }
 
-        static IntPtr[] GetStrides(IntPtr[] shape, long itemSize)
+        private static IntPtr[] GetStrides(IntPtr[] shape, long itemSize)
         {
             var result = new IntPtr[shape.Length];
             result[shape.Length - 1] = new IntPtr(itemSize);
@@ -456,34 +459,42 @@ namespace Python.Runtime
             }
             return result;
         }
-        static IntPtr[] GetShape(Array array)
+        private static IntPtr[] GetShape(Array array)
         {
             var result = new IntPtr[array.Rank];
             for (int i = 0; i < result.Length; i++)
+            {
                 result[i] = (IntPtr)array.GetLongLength(i);
+            }
+
             return result;
         }
 
-        static void UnmanagedFree(ref IntPtr address)
+        private static void UnmanagedFree(ref IntPtr address)
         {
-            if (address == IntPtr.Zero) return;
+            if (address == IntPtr.Zero)
+            {
+                return;
+            }
 
             Marshal.FreeHGlobal(address);
             address = IntPtr.Zero;
         }
-        static unsafe IntPtr ToUnmanaged<T>(T[] array) where T : unmanaged
+        private static unsafe IntPtr ToUnmanaged<T>(T[] array) where T : unmanaged
         {
             IntPtr result = Marshal.AllocHGlobal(checked(Marshal.SizeOf(typeof(T)) * array.Length));
             fixed (T* ptr = array)
             {
                 var @out = (T*)result;
                 for (int i = 0; i < array.Length; i++)
+                {
                     @out[i] = ptr[i];
+                }
             }
             return result;
         }
 
-        static readonly Dictionary<Type, string> ItemFormats = new()
+        private static readonly Dictionary<Type, string> ItemFormats = new()
         {
             [typeof(byte)] = "B",
             [typeof(sbyte)] = "b",
@@ -506,13 +517,13 @@ namespace Python.Runtime
             [typeof(double)] = "d",
         };
 
-        static string? GetFormat(Type elementType)
+        private static string? GetFormat(Type elementType)
             => ItemFormats.TryGetValue(elementType, out string result) ? result : null;
 
-        static readonly GetBufferProc getBufferProc = GetBuffer;
-        static readonly ReleaseBufferProc releaseBufferProc = ReleaseBuffer;
-        static readonly IntPtr BufferProcsAddress = AllocateBufferProcs();
-        static IntPtr AllocateBufferProcs()
+        private static readonly GetBufferProc getBufferProc = GetBuffer;
+        private static readonly ReleaseBufferProc releaseBufferProc = ReleaseBuffer;
+        private static readonly IntPtr BufferProcsAddress = AllocateBufferProcs();
+        private static IntPtr AllocateBufferProcs()
         {
             var procs = new PyBufferProcs
             {

@@ -21,7 +21,7 @@ namespace Python.Runtime
             this.ctor = TryGetCOMConstructor(tp);
         }
 
-        static ConstructorInfo? TryGetCOMConstructor(Type tp)
+        private static ConstructorInfo? TryGetCOMConstructor(Type tp)
         {
             var comClass = (CoClassAttribute?)Attribute.GetCustomAttribute(tp, cc_attr);
             return comClass?.CoClass.GetConstructor(Type.EmptyTypes);

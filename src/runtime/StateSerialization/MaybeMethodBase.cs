@@ -1,40 +1,40 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using System.Linq;
 
 using Python.Runtime.Reflection;
 
 namespace Python.Runtime
 {
     [Serializable]
-    internal struct MaybeMethodBase<T> : ISerializable where T: MethodBase
+    internal struct MaybeMethodBase<T> : ISerializable where T : MethodBase
     {
         // .ToString() of the serialized object
-        const string SerializationName = "s";
+        private const string SerializationName = "s";
         // The ReflectedType of the object
-        const string SerializationType = "t";
+        private const string SerializationType = "t";
         // Fhe parameters of the MethodBase
-        const string SerializationParameters = "p";
-        const string SerializationMethodName = "n";
-        const string SerializationGenericParamCount = "G";
-        const string SerializationFlags = "V";
+        private const string SerializationParameters = "p";
+        private const string SerializationMethodName = "n";
+        private const string SerializationGenericParamCount = "G";
+        private const string SerializationFlags = "V";
 
-        public static implicit operator MaybeMethodBase<T> (T? ob) => new (ob);
+        public static implicit operator MaybeMethodBase<T>(T? ob) => new(ob);
 
-        readonly string? name;
-        readonly MethodBase? info;
+        private readonly string? name;
+        private readonly MethodBase? info;
 
         [NonSerialized]
-        readonly Exception? deserializationException;
+        private readonly Exception? deserializationException;
 
-        public string DeletedMessage 
+        public string DeletedMessage
         {
             get
             {
-                return $"The .NET {typeof(T)} {name} no longer exists. Cause: " + deserializationException?.Message ;
+                return $"The .NET {typeof(T)} {name} no longer exists. Cause: " + deserializationException?.Message;
             }
         }
 
@@ -57,7 +57,7 @@ namespace Python.Runtime
 
         public override string ToString()
         {
-            return (info != null ? info.ToString() : $"missing method info: {name}");
+            return info != null ? info.ToString() : $"missing method info: {name}";
         }
 
         public MaybeMethodBase(T? mi)
@@ -74,7 +74,10 @@ namespace Python.Runtime
             info = null;
             deserializationException = null;
 
-            if (name is null) return;
+            if (name is null)
+            {
+                return;
+            }
 
             try
             {
@@ -101,10 +104,13 @@ namespace Python.Runtime
             }
         }
 
-        static MethodBase ScanForMethod(Type declaringType, string name, int genericCount, MaybeMethodFlags flags, ParameterHelper[] parameters)
+        private static MethodBase ScanForMethod(Type declaringType, string name, int genericCount, MaybeMethodFlags flags, ParameterHelper[] parameters)
         {
             var bindingFlags = ClassManager.BindingFlags;
-            if (flags.HasFlag(MaybeMethodFlags.Constructor)) bindingFlags &= ~BindingFlags.Static;
+            if (flags.HasFlag(MaybeMethodFlags.Constructor))
+            {
+                bindingFlags &= ~BindingFlags.Static;
+            }
 
             var alternatives = declaringType.GetMember(name,
                 flags.HasFlag(MaybeMethodFlags.Constructor)
@@ -113,7 +119,9 @@ namespace Python.Runtime
                 bindingFlags);
 
             if (alternatives.Length == 0)
+            {
                 throw new MissingMethodException($"{declaringType}.{name}");
+            }
 
             var visibility = flags & MaybeMethodFlags.Visibility;
 
@@ -122,22 +130,34 @@ namespace Python.Runtime
                 && (Visibility(m) == visibility || ClassManager.ShouldBindMethod(m)));
 
             if (result is null)
+            {
                 throw new MissingMethodException($"Matching overload not found for {declaringType}.{name}");
+            }
 
             return result;
         }
 
-        static bool MatchesGenericCount(MethodBase method, int genericCount)
+        private static bool MatchesGenericCount(MethodBase method, int genericCount)
             => method.ContainsGenericParameters
                 ? method.GetGenericArguments().Length == genericCount
                 : genericCount == 0;
 
-        static bool MatchesSignature(MethodBase method, ParameterHelper[] parameters)
+        private static bool MatchesSignature(MethodBase method, ParameterHelper[] parameters)
         {
             var curr = method.GetParameters();
-            if (curr.Length != parameters.Length) return false;
+            if (curr.Length != parameters.Length)
+            {
+                return false;
+            }
+
             for (int i = 0; i < curr.Length; i++)
-                if (!parameters[i].Matches(curr[i])) return false;
+            {
+                if (!parameters[i].Matches(curr[i]))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -158,16 +178,28 @@ namespace Python.Runtime
             }
         }
 
-        static MaybeMethodFlags Flags(MethodBase method)
+        private static MaybeMethodFlags Flags(MethodBase method)
         {
             var flags = MaybeMethodFlags.Default;
-            if (method.IsConstructor) flags |= MaybeMethodFlags.Constructor;
-            if (method.IsStatic) flags |= MaybeMethodFlags.Static;
-            if (method.IsPublic) flags |= MaybeMethodFlags.Public;
+            if (method.IsConstructor)
+            {
+                flags |= MaybeMethodFlags.Constructor;
+            }
+
+            if (method.IsStatic)
+            {
+                flags |= MaybeMethodFlags.Static;
+            }
+
+            if (method.IsPublic)
+            {
+                flags |= MaybeMethodFlags.Public;
+            }
+
             return flags;
         }
 
-        static MaybeMethodFlags Visibility(MethodBase method)
+        private static MaybeMethodFlags Visibility(MethodBase method)
             => Flags(method) & MaybeMethodFlags.Visibility;
     }
 

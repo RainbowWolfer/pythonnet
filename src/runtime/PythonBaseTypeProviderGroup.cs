@@ -4,14 +4,19 @@ using System.Linq;
 
 namespace Python.Runtime
 {
-    class PythonBaseTypeProviderGroup : List<IPythonBaseTypeProvider>, IPythonBaseTypeProvider
+    internal class PythonBaseTypeProviderGroup : List<IPythonBaseTypeProvider>, IPythonBaseTypeProvider
     {
         public IEnumerable<PyType> GetBaseTypes(Type type, IList<PyType> existingBases)
         {
             if (type is null)
+            {
                 throw new ArgumentNullException(nameof(type));
+            }
+
             if (existingBases is null)
+            {
                 throw new ArgumentNullException(nameof(existingBases));
+            }
 
             foreach (var provider in this)
             {

@@ -8,20 +8,20 @@ namespace Python.Runtime
     internal struct MaybeMemberInfo<T> : ISerializable where T : MemberInfo
     {
         // .ToString() of the serialized object
-        const string SerializationDescription = "d";
+        private const string SerializationDescription = "d";
         // The ReflectedType of the object
-        const string SerializationType = "t";
-        const string SerializationMemberName = "n";
-        readonly MemberInfo? info;
+        private const string SerializationType = "t";
+        private const string SerializationMemberName = "n";
+        private readonly MemberInfo? info;
 
         [NonSerialized]
-        readonly Exception? deserializationException;
+        private readonly Exception? deserializationException;
 
         public string DeletedMessage
         {
             get
             {
-                return $"The .NET {typeof(T).Name} {Description} no longer exists. Cause: " + deserializationException?.Message ;
+                return $"The .NET {typeof(T).Name} {Description} no longer exists. Cause: " + deserializationException?.Message;
             }
         }
 
@@ -42,7 +42,7 @@ namespace Python.Runtime
 
         public override string ToString()
         {
-            return (info != null ? info.ToString() : $"missing: {Description}");
+            return info != null ? info.ToString() : $"missing: {Description}";
         }
 
         public MaybeMemberInfo(T fi)
@@ -50,7 +50,10 @@ namespace Python.Runtime
             info = fi;
             Description = info.ToString();
             if (info.DeclaringType is not null)
+            {
                 Description += " of " + info.DeclaringType;
+            }
+
             deserializationException = null;
         }
 
@@ -78,12 +81,18 @@ namespace Python.Runtime
             }
         }
 
-        static MemberInfo? Get(Type type, string name, BindingFlags flags)
+        private static MemberInfo? Get(Type type, string name, BindingFlags flags)
         {
             if (typeof(T) == typeof(FieldInfo))
+            {
                 return type.GetField(name, flags);
+            }
+
             if (typeof(T) == typeof(PropertyInfo))
+            {
                 return type.GetProperty(name, flags);
+            }
+
             throw new NotImplementedException(typeof(T).Name);
         }
 
@@ -92,7 +101,7 @@ namespace Python.Runtime
         // based on it's setter/getter (which is a method 
         //  info) visibility and events based on their
         // AddMethod visibility.
-        static bool ShouldBindMember(MemberInfo mi)
+        private static bool ShouldBindMember(MemberInfo mi)
         {
             if (mi is PropertyInfo pi)
             {

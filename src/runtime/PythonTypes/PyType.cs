@@ -21,23 +21,33 @@ namespace Python.Runtime
 
         internal PyType(BorrowedReference reference, bool prevalidated = false) : base(reference)
         {
-            if (prevalidated) return;
+            if (prevalidated)
+            {
+                return;
+            }
 
             if (!Runtime.PyType_Check(this))
+            {
                 throw new ArgumentException("object is not a type");
+            }
         }
 
         internal PyType(in StolenReference reference, bool prevalidated = false) : base(reference)
         {
-            if (prevalidated) return;
+            if (prevalidated)
+            {
+                return;
+            }
 
             if (!Runtime.PyType_Check(this))
+            {
                 throw new ArgumentException("object is not a type");
+            }
         }
 
         protected PyType(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-        internal new static PyType? FromNullableReference(BorrowedReference reference)
+        internal static new PyType? FromNullableReference(BorrowedReference reference)
             => reference == null
                 ? null
                 : new PyType(new NewReference(reference).Steal());
@@ -73,7 +83,10 @@ namespace Python.Runtime
         /// <summary>Checks if specified object is a Python type.</summary>
         public static bool IsType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             return Runtime.PyType_Check(value.obj);
         }
@@ -139,18 +152,30 @@ namespace Python.Runtime
 
         private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
-            if (!IsType(o)) throw new ArgumentException("object is not a type");
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            if (!IsType(o))
+            {
+                throw new ArgumentException("object is not a type");
+            }
 
             return o.Reference;
         }
 
         private static StolenReference FromSpec(TypeSpec spec, PyTuple? bases = null)
         {
-            if (spec is null) throw new ArgumentNullException(nameof(spec));
+            if (spec is null)
+            {
+                throw new ArgumentNullException(nameof(spec));
+            }
 
             if ((spec.Flags & TypeFlags.HeapType) == 0)
+            {
                 throw new NotSupportedException("Only heap types are supported");
+            }
 
             using var nativeSpec = new NativeTypeSpec(spec);
             var basesRef = bases is null ? default : bases.Reference;

@@ -2,7 +2,7 @@ using System;
 
 namespace Python.Runtime;
 
-partial class PyFloat : IComparable<double>, IComparable<float>
+public partial class PyFloat : IComparable<double>, IComparable<float>
     , IEquatable<double>, IEquatable<float>
     , IComparable<PyFloat?>, IEquatable<PyFloat?>
 {

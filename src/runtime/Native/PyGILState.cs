@@ -1,8 +1,8 @@
 namespace Python.Runtime.Native;
 
 /// <remarks><c>PyGILState_STATE</c></remarks>
-enum PyGILState
+internal enum PyGILState
 {
     PyGILState_LOCKED,
-    PyGILState_UNLOCKED 
+    PyGILState_UNLOCKED
 }

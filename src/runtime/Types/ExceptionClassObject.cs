@@ -22,7 +22,7 @@ internal class ExceptionClassObject : ClassObject
     /// <summary>
     /// Exception __repr__ implementation
     /// </summary>
-    public new static NewReference tp_repr(BorrowedReference ob)
+    public static new NewReference tp_repr(BorrowedReference ob)
     {
         Exception? e = ToException(ob);
         if (e == null)
@@ -45,7 +45,7 @@ internal class ExceptionClassObject : ClassObject
     /// <summary>
     /// Exception __str__ implementation
     /// </summary>
-    public new static NewReference tp_str(BorrowedReference ob)
+    public static new NewReference tp_str(BorrowedReference ob)
     {
         Exception? e = ToException(ob);
         if (e == null)
@@ -69,7 +69,10 @@ internal class ExceptionClassObject : ClassObject
 
     public override bool Init(BorrowedReference obj, BorrowedReference args, BorrowedReference kw)
     {
-        if (!base.Init(obj, args, kw)) return false;
+        if (!base.Init(obj, args, kw))
+        {
+            return false;
+        }
 
         var e = (CLRObject)GetManagedObject(obj)!;
 

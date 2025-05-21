@@ -55,9 +55,15 @@ namespace Python.Runtime
 
         private static StolenReference FromArray(PyObject[] items)
         {
-            if (items is null) throw new ArgumentNullException(nameof(items));
+            if (items is null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             if (items.Any(item => item is null))
+            {
                 throw new ArgumentException(message: Util.UseNone, paramName: nameof(items));
+            }
 
             int count = items.Length;
             using var val = Runtime.PyList_New(count);
@@ -85,7 +91,10 @@ namespace Python.Runtime
         /// </summary>
         public static bool IsListType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             return Runtime.PyList_Check(value.obj);
         }
@@ -98,7 +107,10 @@ namespace Python.Runtime
         /// </summary>
         public static PyList AsList(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             NewReference op = Runtime.PySequence_List(value.Reference);
             if (op.IsNull())
@@ -114,7 +126,10 @@ namespace Python.Runtime
         /// </summary>
         public void Append(PyObject item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             int r = Runtime.PyList_Append(this.Reference, item.Reference);
             if (r < 0)
@@ -128,7 +143,10 @@ namespace Python.Runtime
         /// </summary>
         public void Insert(int index, PyObject item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if (item is null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             int r = Runtime.PyList_Insert(this, index, item);
             if (r < 0)
@@ -173,9 +191,21 @@ namespace Python.Runtime
 
         public override bool Equals(PyObject? other)
         {
-            if (other is null) return false;
-            if (obj == other.obj) return true;
-            if (other is PyList || IsListType(other)) return base.Equals(other);
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (obj == other.obj)
+            {
+                return true;
+            }
+
+            if (other is PyList || IsListType(other))
+            {
+                return base.Equals(other);
+            }
+
             return false;
         }
     }

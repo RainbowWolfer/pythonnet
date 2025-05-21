@@ -17,7 +17,10 @@ namespace Python.Runtime
 
         internal PyInt(BorrowedReference reference) : base(reference)
         {
-            if (!Runtime.PyInt_Check(reference)) throw new ArgumentException("object is not an int");
+            if (!Runtime.PyInt_Check(reference))
+            {
+                throw new ArgumentException("object is not an int");
+            }
         }
 
 
@@ -35,7 +38,11 @@ namespace Python.Runtime
 
         private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
             if (!IsIntType(o))
             {
                 throw new ArgumentException("object is not an int");
@@ -149,7 +156,11 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsIntType(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return Runtime.PyInt_Check(value.obj);
         }
 
@@ -161,7 +172,11 @@ namespace Python.Runtime
         /// </summary>
         public static PyInt AsInt(PyObject value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             var op = Runtime.PyNumber_Long(value.Reference);
             PythonException.ThrowIfIsNull(op);
             return new PyInt(op.Steal());
@@ -212,7 +227,7 @@ namespace Python.Runtime
                 offset++;
                 neg = true;
             }
-            byte[] littleEndianBytes = new byte[(hex.Length - offset + 1) / 2 + 1];
+            byte[] littleEndianBytes = new byte[((hex.Length - offset + 1) / 2) + 1];
             for (; offset < hex.Length; offset++)
             {
                 int littleEndianHexIndex = hex.Length - 1 - offset;

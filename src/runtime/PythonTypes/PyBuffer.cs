@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -29,20 +28,22 @@ namespace Python.Runtime
                 Shape = intPtrBuf.Select(x => (long)x).ToArray();
             }
 
-            if (_view.strides != IntPtr.Zero) {
+            if (_view.strides != IntPtr.Zero)
+            {
                 Marshal.Copy(_view.strides, intPtrBuf, 0, _view.ndim);
                 Strides = intPtrBuf.Select(x => (long)x).ToArray();
             }
 
-            if (_view.suboffsets != IntPtr.Zero) {
+            if (_view.suboffsets != IntPtr.Zero)
+            {
                 Marshal.Copy(_view.suboffsets, intPtrBuf, 0, _view.ndim);
                 SubOffsets = intPtrBuf.Select(x => (long)x).ToArray();
             }
         }
 
         public PyObject Object => _exporter;
-        public long Length => (long)_view.len;
-        public long ItemSize => (long)_view.itemsize;
+        public long Length => _view.len;
+        public long ItemSize => _view.itemsize;
         public int Dimensions => _view.ndim;
         public bool ReadOnly => _view._readonly;
         public IntPtr Buffer => _view.buf;
@@ -70,13 +71,23 @@ namespace Python.Runtime
         {
             char style = 'C';
             if (order == BufferOrderStyle.C)
+            {
                 style = 'C';
+            }
             else if (order == BufferOrderStyle.Fortran)
+            {
                 style = 'F';
+            }
             else if (order == BufferOrderStyle.EitherOne)
             {
-                if (eitherOneValid) style = 'A';
-                else throw new ArgumentException("BufferOrderStyle can not be EitherOne and has to be C or Fortran");
+                if (eitherOneValid)
+                {
+                    style = 'A';
+                }
+                else
+                {
+                    throw new ArgumentException("BufferOrderStyle can not be EitherOne and has to be C or Fortran");
+                }
             }
             return style;
         }
@@ -87,10 +98,17 @@ namespace Python.Runtime
         /// </summary>
         public static long SizeFromFormat(string format)
         {
-            if (Runtime.PyVersion < new Version(3,9))
+            if (Runtime.PyVersion < new Version(3, 9))
+            {
                 throw new NotSupportedException("SizeFromFormat requires at least Python 3.9");
+            }
+
             nint result = Runtime.PyBuffer_SizeFromFormat(format);
-            if (result == -1) throw PythonException.ThrowLastAsClrException();
+            if (result == -1)
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
+
             return result;
         }
 
@@ -101,7 +119,10 @@ namespace Python.Runtime
         public bool IsContiguous(BufferOrderStyle order)
         {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             return Convert.ToBoolean(Runtime.PyBuffer_IsContiguous(ref _view, OrderStyleToChar(order, true)));
         }
 
@@ -110,11 +131,21 @@ namespace Python.Runtime
         /// </summary>
         public IntPtr GetPointer(long[] indices)
         {
-            if (indices is null) throw new ArgumentNullException(nameof(indices));
+            if (indices is null)
+            {
+                throw new ArgumentNullException(nameof(indices));
+            }
+
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             if (Runtime.PyVersion < new Version(3, 7))
+            {
                 throw new NotSupportedException("GetPointer requires at least Python 3.7");
+            }
+
             return Runtime.PyBuffer_GetPointer(ref _view, indices.Select(x => checked((nint)x)).ToArray());
         }
 
@@ -124,12 +155,19 @@ namespace Python.Runtime
         public void FromContiguous(IntPtr buf, long len, BufferOrderStyle fort)
         {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             if (Runtime.PyVersion < new Version(3, 7))
+            {
                 throw new NotSupportedException("FromContiguous requires at least Python 3.7");
+            }
 
             if (Runtime.PyBuffer_FromContiguous(ref _view, buf, checked((nint)len), OrderStyleToChar(fort, false)) < 0)
+            {
                 throw PythonException.ThrowLastAsClrException();
+            }
         }
 
         /// <summary>
@@ -140,10 +178,14 @@ namespace Python.Runtime
         public void ToContiguous(IntPtr buf, BufferOrderStyle order)
         {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
 
             if (Runtime.PyBuffer_ToContiguous(buf, ref _view, _view.len, OrderStyleToChar(order, true)) < 0)
+            {
                 throw PythonException.ThrowLastAsClrException();
+            }
         }
 
         /// <summary>
@@ -167,9 +209,14 @@ namespace Python.Runtime
         internal void FillInfo(BorrowedReference exporter, IntPtr buf, long len, bool _readonly, int flags)
         {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             if (Runtime.PyBuffer_FillInfo(ref _view, exporter, buf, (IntPtr)len, Convert.ToInt32(_readonly), flags) < 0)
+            {
                 throw PythonException.ThrowLastAsClrException();
+            }
         }
 
         /// <summary>
@@ -178,27 +225,54 @@ namespace Python.Runtime
         public void Write(byte[] buffer, int sourceOffset, int count, nint destinationOffset)
         {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             if (_view.ndim != 1)
+            {
                 throw new NotImplementedException("Multidimensional arrays, scalars and objects without a buffer are not supported.");
+            }
+
             if (!this.IsContiguous(BufferOrderStyle.C))
+            {
                 throw new NotImplementedException("Only continuous buffers are supported");
+            }
+
             if (ReadOnly)
+            {
                 throw new InvalidOperationException("Buffer is read-only");
+            }
+
             if (buffer is null)
+            {
                 throw new ArgumentNullException(nameof(buffer));
+            }
 
             if (sourceOffset < 0)
+            {
                 throw new IndexOutOfRangeException($"{nameof(sourceOffset)} is negative");
+            }
+
             if (destinationOffset < 0)
+            {
                 throw new IndexOutOfRangeException($"{nameof(destinationOffset)} is negative");
+            }
+
             if (count < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(count), count, "Value must be >= 0");
+            }
 
             if (checked(count + sourceOffset) > buffer.Length)
+            {
                 throw new ArgumentOutOfRangeException("count", "Count is bigger than the buffer.");
+            }
+
             if (checked(count + destinationOffset) > _view.len)
+            {
                 throw new ArgumentOutOfRangeException("count", "Count is bigger than the python buffer.");
+            }
 
             Marshal.Copy(buffer, sourceOffset, _view.buf + destinationOffset, count);
         }
@@ -206,27 +280,52 @@ namespace Python.Runtime
         /// <summary>
         /// Reads the buffer of a python object into a managed byte array. This can be used to pass data like images from python to managed.
         /// </summary>
-        public void Read(byte[] buffer, int destinationOffset, int count, nint sourceOffset) {
+        public void Read(byte[] buffer, int destinationOffset, int count, nint sourceOffset)
+        {
             if (disposedValue)
+            {
                 throw new ObjectDisposedException(nameof(PyBuffer));
+            }
+
             if (_view.ndim != 1)
+            {
                 throw new NotImplementedException("Multidimensional arrays, scalars and objects without a buffer are not supported.");
+            }
+
             if (!this.IsContiguous(BufferOrderStyle.C))
+            {
                 throw new NotImplementedException("Only continuous buffers are supported");
+            }
+
             if (buffer is null)
+            {
                 throw new ArgumentNullException(nameof(buffer));
+            }
 
             if (sourceOffset < 0)
+            {
                 throw new IndexOutOfRangeException($"{nameof(sourceOffset)} is negative");
+            }
+
             if (destinationOffset < 0)
+            {
                 throw new IndexOutOfRangeException($"{nameof(destinationOffset)} is negative");
+            }
+
             if (count < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(count), count, "Value must be >= 0");
+            }
 
             if (checked(count + destinationOffset) > buffer.Length)
+            {
                 throw new ArgumentOutOfRangeException("count", "Count is bigger than the buffer.");
+            }
+
             if (checked(count + sourceOffset) > _view.len)
+            {
                 throw new ArgumentOutOfRangeException("count", "Count is bigger than the python buffer.");
+            }
 
             Marshal.Copy(_view.buf + sourceOffset, buffer, destinationOffset, count);
         }
@@ -238,7 +337,9 @@ namespace Python.Runtime
             if (!disposedValue)
             {
                 if (Runtime.Py_IsInitialized() == 0)
+                {
                     throw new InvalidOperationException("Python runtime must be initialized");
+                }
 
                 // this also decrements ref count for _view->obj
                 Runtime.PyBuffer_Release(ref _view);

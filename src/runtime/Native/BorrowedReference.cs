@@ -7,9 +7,9 @@ namespace Python.Runtime
     /// Represents a reference to a Python object, that is being lent, and
     /// can only be safely used until execution returns to the caller.
     /// </summary>
-    readonly ref struct BorrowedReference
+    internal readonly ref struct BorrowedReference
     {
-        readonly IntPtr pointer;
+        private readonly IntPtr pointer;
         public bool IsNull => this.pointer == IntPtr.Zero;
 
         /// <summary>Gets a raw pointer to the Python object</summary>
@@ -42,9 +42,12 @@ namespace Python.Runtime
         public static bool operator !=(NullOnly? @null, BorrowedReference reference)
             => !reference.IsNull;
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             if (obj is IntPtr ptr)
+            {
                 return ptr == pointer;
+            }
 
             return false;
         }

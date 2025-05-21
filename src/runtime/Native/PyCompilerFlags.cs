@@ -3,7 +3,7 @@ using System;
 namespace Python.Runtime.Native
 {
     [Flags]
-    enum PyCompilerFlags
+    internal enum PyCompilerFlags
     {
         SOURCE_IS_UTF8 = 0x0100,
         DONT_IMPLY_DEDENT = 0x0200,

@@ -15,7 +15,7 @@ namespace Python.Runtime
     /// </summary>
     internal class DelegateManager
     {
-        private readonly Dictionary<Type,Type> cache = new();
+        private readonly Dictionary<Type, Type> cache = new();
         private readonly Type basetype = typeof(Dispatcher);
         private readonly Type arrayType = typeof(object[]);
         private readonly Type voidtype = typeof(void);
@@ -190,8 +190,8 @@ namespace Python.Runtime
 
     public class Dispatcher
     {
-        readonly PyObject target;
-        readonly Type dtype;
+        private readonly PyObject target;
+        private readonly Type dtype;
 
         protected Dispatcher(PyObject target, Type dtype)
         {
@@ -310,13 +310,21 @@ namespace Python.Runtime
                             tpName += $" of size {Runtime.PyTuple_Size(op)}";
                         }
                         var sb = new StringBuilder();
-                        if (!isVoid) sb.Append(rtype.FullName);
+                        if (!isVoid)
+                        {
+                            sb.Append(rtype.FullName);
+                        }
+
                         for (int i = 0; i < pi.Length; i++)
                         {
                             Type t = pi[i].ParameterType;
                             if (t.IsByRef)
                             {
-                                if (sb.Length > 0) sb.Append(",");
+                                if (sb.Length > 0)
+                                {
+                                    sb.Append(",");
+                                }
+
                                 sb.Append(t.GetElementType().FullName);
                             }
                         }

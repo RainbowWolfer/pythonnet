@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
+
 using Python.Runtime.Native;
 using Python.Runtime.StateSerialization;
 
@@ -28,7 +29,7 @@ namespace Python.Runtime
         private const BindingFlags tbFlags = BindingFlags.Public | BindingFlags.Static;
         private static readonly Dictionary<MaybeType, PyType> cache = new();
 
-        static readonly Dictionary<PyType, SlotsHolder> _slotsHolders = new(PythonReferenceComparer.Instance);
+        private static readonly Dictionary<PyType, SlotsHolder> _slotsHolders = new(PythonReferenceComparer.Instance);
 
         // Slots which must be set
         private static readonly string[] _requiredSlots = new string[]
@@ -192,7 +193,7 @@ namespace Python.Runtime
             return result.ToString();
         }
 
-        static void GetPythonTypeName(Type clrType, System.Text.StringBuilder target)
+        private static void GetPythonTypeName(Type clrType, System.Text.StringBuilder target)
         {
             if (clrType.IsGenericType)
             {
@@ -242,7 +243,7 @@ namespace Python.Runtime
             target.Append(name);
         }
 
-        static string CleanupFullName(string fullTypeName)
+        private static string CleanupFullName(string fullTypeName)
         {
             // Cleanup the type name to get rid of funny nested type names.
             string name = "clr." + fullTypeName;
@@ -261,7 +262,7 @@ namespace Python.Runtime
             return name;
         }
 
-        static BorrowedReference InitializeBases(PyType pyType, PyTuple baseTuple)
+        private static BorrowedReference InitializeBases(PyType pyType, PyTuple baseTuple)
         {
             Debug.Assert(baseTuple.Length() > 0);
             var primaryBase = baseTuple[0].Reference;
@@ -274,7 +275,7 @@ namespace Python.Runtime
             return primaryBase;
         }
 
-        static void InitializeCoreFields(PyType type)
+        private static void InitializeCoreFields(PyType type)
         {
             int newFieldOffset = InheritOrAllocateStandardFields(type);
 
@@ -316,19 +317,21 @@ namespace Python.Runtime
             var dict = Util.ReadRef(type, TypeOffset.tp_dict);
             string mn = clrType.Namespace ?? "";
             using (var mod = Runtime.PyString_FromString(mn))
+            {
                 Runtime.PyDict_SetItem(dict, PyIdentifier.__module__, mod.Borrow());
+            }
 
             Runtime.PyType_Modified(type.Reference);
 
             //DebugUtil.DumpType(type);
         }
 
-        static int InheritOrAllocateStandardFields(BorrowedReference type)
+        private static int InheritOrAllocateStandardFields(BorrowedReference type)
         {
             var @base = Util.ReadRef(type, TypeOffset.tp_base);
             return InheritOrAllocateStandardFields(type, @base);
         }
-        static int InheritOrAllocateStandardFields(BorrowedReference typeRef, BorrowedReference @base)
+        private static int InheritOrAllocateStandardFields(BorrowedReference typeRef, BorrowedReference @base)
         {
             IntPtr baseAddress = @base.DangerousGetAddress();
             IntPtr type = typeRef.DangerousGetAddress();
@@ -355,7 +358,7 @@ namespace Python.Runtime
             return newFieldOffset;
         }
 
-        static PyTuple GetBaseTypeTuple(Type clrType)
+        private static PyTuple GetBaseTypeTuple(Type clrType)
         {
             var bases = pythonBaseTypeProvider
                 .GetBaseTypes(clrType, new PyType[0])
@@ -395,7 +398,10 @@ namespace Python.Runtime
                 var assemblyPtr = Runtime.PyDict_GetItemWithError(dictRef, assemblyKey.Reference);
                 if (assemblyPtr.IsNull)
                 {
-                    if (Exceptions.ErrorOccurred()) return default;
+                    if (Exceptions.ErrorOccurred())
+                    {
+                        return default;
+                    }
                 }
                 else if (!Converter.ToManagedValue(assemblyPtr, typeof(string), out assembly, true))
                 {
@@ -406,7 +412,10 @@ namespace Python.Runtime
                 var pyNamespace = Runtime.PyDict_GetItemWithError(dictRef, namespaceKey.Reference);
                 if (pyNamespace.IsNull)
                 {
-                    if (Exceptions.ErrorOccurred()) return default;
+                    if (Exceptions.ErrorOccurred())
+                    {
+                        return default;
+                    }
                 }
                 else if (!Converter.ToManagedValue(pyNamespace, typeof(string), out namespaceStr, true))
                 {
@@ -427,7 +436,7 @@ namespace Python.Runtime
             Marshal.WriteIntPtr(mdef, 1 * IntPtr.Size, func);
             Marshal.WriteInt32(mdef, 2 * IntPtr.Size, (int)flags);
             Marshal.WriteIntPtr(mdef, 3 * IntPtr.Size, doc);
-            return mdef + 4 * IntPtr.Size;
+            return mdef + (4 * IntPtr.Size);
         }
 
         internal static IntPtr WriteMethodDef(IntPtr mdef, string name, IntPtr func, PyMethodFlags flags = PyMethodFlags.VarArgs,
@@ -525,7 +534,9 @@ namespace Python.Runtime
 
             BorrowedReference dict = Util.ReadRef(type, TypeOffset.tp_dict);
             using (var mod = Runtime.PyString_FromString("clr._internal"))
+            {
                 Runtime.PyDict_SetItemString(dict, "__module__", mod.Borrow());
+            }
 
             // The type has been modified after PyType_Ready has been called
             // Refresh the type
@@ -627,7 +638,7 @@ namespace Python.Runtime
         /// Inherit substructs, that are not inherited by default:
         /// https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_as_number
         /// </summary>
-        static void InheritSubstructs(IntPtr type)
+        private static void InheritSubstructs(IntPtr type)
         {
             IntPtr substructAddress = type + TypeOffset.nb_add;
             Marshal.WriteIntPtr(type, TypeOffset.tp_as_number, substructAddress);
@@ -698,7 +709,7 @@ namespace Python.Runtime
             }
         }
 
-        static void InitializeSlot(BorrowedReference type, ThunkInfo thunk, string name, SlotsHolder? slotsHolder)
+        private static void InitializeSlot(BorrowedReference type, ThunkInfo thunk, string name, SlotsHolder? slotsHolder)
         {
             if (!Enum.TryParse<TypeSlotID>(name, out _))
             {
@@ -708,7 +719,7 @@ namespace Python.Runtime
             InitializeSlot(type, offset, thunk, slotsHolder);
         }
 
-        static void InitializeSlot(BorrowedReference type, int slotOffset, MethodInfo method, SlotsHolder slotsHolder)
+        private static void InitializeSlot(BorrowedReference type, int slotOffset, MethodInfo method, SlotsHolder slotsHolder)
         {
             var thunk = Interop.GetThunk(method);
             InitializeSlot(type, slotOffset, thunk, slotsHolder);
@@ -722,11 +733,15 @@ namespace Python.Runtime
 
         internal static void InitializeSlotIfEmpty(BorrowedReference type, int slotOffset, Delegate impl, SlotsHolder slotsHolder)
         {
-            if (slotsHolder.IsHolding(slotOffset)) return;
+            if (slotsHolder.IsHolding(slotOffset))
+            {
+                return;
+            }
+
             InitializeSlot(type, slotOffset, impl, slotsHolder);
         }
 
-        static void InitializeSlot(BorrowedReference type, int slotOffset, ThunkInfo thunk, SlotsHolder? slotsHolder)
+        private static void InitializeSlot(BorrowedReference type, int slotOffset, ThunkInfo thunk, SlotsHolder? slotsHolder)
         {
             Util.WriteIntPtr(type, slotOffset, thunk.Address);
             if (slotsHolder != null)
@@ -754,7 +769,7 @@ namespace Python.Runtime
     }
 
 
-    class SlotsHolder
+    internal class SlotsHolder
     {
         public delegate void Resetor(PyType type, int offset);
 
@@ -897,7 +912,7 @@ namespace Python.Runtime
     }
 
 
-    static class SlotHelper
+    internal static class SlotHelper
     {
         public static NewReference CreateObjectType()
         {

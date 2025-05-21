@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -39,8 +38,8 @@ namespace Python.Runtime
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static T* ReadPtr<T>(BorrowedReference ob, int offset)
-            where T: unmanaged
+        internal static unsafe T* ReadPtr<T>(BorrowedReference ob, int offset)
+            where T : unmanaged
         {
             Debug.Assert(offset >= 0);
             IntPtr ptr = Marshal.ReadIntPtr(ob.DangerousGetAddress(), offset);
@@ -48,14 +47,14 @@ namespace Python.Runtime
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static IntPtr ReadIntPtr(BorrowedReference ob, int offset)
+        internal static unsafe IntPtr ReadIntPtr(BorrowedReference ob, int offset)
         {
             Debug.Assert(offset >= 0);
             return Marshal.ReadIntPtr(ob.DangerousGetAddress(), offset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static BorrowedReference ReadRef(BorrowedReference @ref, int offset)
+        internal static unsafe BorrowedReference ReadRef(BorrowedReference @ref, int offset)
         {
             Debug.Assert(offset >= 0);
             return new BorrowedReference(ReadIntPtr(@ref, offset));
@@ -74,20 +73,20 @@ namespace Python.Runtime
             Marshal.WriteInt64(ob.DangerousGetAddress(), offset, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static void WriteIntPtr(BorrowedReference ob, int offset, IntPtr value)
+        internal static unsafe void WriteIntPtr(BorrowedReference ob, int offset, IntPtr value)
         {
             Debug.Assert(offset >= 0);
             Marshal.WriteIntPtr(ob.DangerousGetAddress(), offset, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static void WriteRef(BorrowedReference ob, int offset, in StolenReference @ref)
+        internal static unsafe void WriteRef(BorrowedReference ob, int offset, in StolenReference @ref)
         {
             Debug.Assert(offset >= 0);
             Marshal.WriteIntPtr(ob.DangerousGetAddress(), offset, @ref.DangerousGetAddress());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal unsafe static void WriteNullableRef(BorrowedReference ob, int offset, in StolenReference @ref)
+        internal static unsafe void WriteNullableRef(BorrowedReference ob, int offset, in StolenReference @ref)
         {
             Debug.Assert(offset >= 0);
             Marshal.WriteIntPtr(ob.DangerousGetAddress(), offset, @ref.DangerousGetAddressOrNull());
@@ -125,7 +124,9 @@ namespace Python.Runtime
         internal static string? AfterLast(this string str, char symbol)
         {
             if (str is null)
+            {
                 throw new ArgumentNullException(nameof(str));
+            }
 
             int last = str.LastIndexOf(symbol);
             return last >= 0 ? str.Substring(last + 1) : null;
@@ -133,8 +134,15 @@ namespace Python.Runtime
 
         internal static string ReadStringResource(this System.Reflection.Assembly assembly, string resourceName)
         {
-            if (assembly is null) throw new ArgumentNullException(nameof(assembly));
-            if (string.IsNullOrEmpty(resourceName)) throw new ArgumentNullException(nameof(resourceName));
+            if (assembly is null)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+
+            if (string.IsNullOrEmpty(resourceName))
+            {
+                throw new ArgumentNullException(nameof(resourceName));
+            }
 
             using var stream = assembly.GetManifestResourceStream(resourceName);
             using var reader = new StreamReader(stream);
@@ -151,11 +159,14 @@ namespace Python.Runtime
         public static IEnumerator<T> GetEnumerator<T>(this IEnumerator<T> enumerator) => enumerator;
 
         public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
-            where T: class
+            where T : class
         {
             foreach (var item in source)
             {
-                if (item is not null) yield return item;
+                if (item is not null)
+                {
+                    yield return item;
+                }
             }
         }
     }

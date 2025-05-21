@@ -22,7 +22,11 @@ namespace Python.Runtime
 
         private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
             if (!IsStringType(o))
             {
                 throw new ArgumentException("object is not a string");

@@ -31,7 +31,10 @@ namespace Python.Runtime
 
         internal ClassBase(Type tp)
         {
-            if (tp is null) throw new ArgumentNullException(nameof(type));
+            if (tp is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             indexer = null;
             type = tp;
@@ -42,7 +45,7 @@ namespace Python.Runtime
             return !type.Value.IsEnum;
         }
 
-        public readonly static Dictionary<string, int> CilToPyOpMap = new()
+        public static readonly Dictionary<string, int> CilToPyOpMap = new()
         {
             ["op_Equality"] = Runtime.Py_EQ,
             ["op_Inequality"] = Runtime.Py_NE,
@@ -166,7 +169,7 @@ namespace Python.Runtime
                         BorrowedReference pyCmp;
                         if (cmp < 0)
                         {
-                            if (op == Runtime.Py_LT || op == Runtime.Py_LE)
+                            if (op is Runtime.Py_LT or Runtime.Py_LE)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -177,7 +180,7 @@ namespace Python.Runtime
                         }
                         else if (cmp == 0)
                         {
-                            if (op == Runtime.Py_LE || op == Runtime.Py_GE)
+                            if (op is Runtime.Py_LE or Runtime.Py_GE)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -188,7 +191,7 @@ namespace Python.Runtime
                         }
                         else
                         {
-                            if (op == Runtime.Py_GE || op == Runtime.Py_GT)
+                            if (op is Runtime.Py_GE or Runtime.Py_GT)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -213,7 +216,7 @@ namespace Python.Runtime
         /// allows natural iteration over objects that either are IEnumerable
         /// or themselves support IEnumerator directly.
         /// </summary>
-        static NewReference tp_iter_impl(BorrowedReference ob)
+        private static NewReference tp_iter_impl(BorrowedReference ob)
         {
             if (GetManagedObject(ob) is not CLRObject co)
             {
@@ -276,8 +279,7 @@ namespace Python.Runtime
         /// </summary>
         public static NewReference tp_str(BorrowedReference ob)
         {
-            var co = GetManagedObject(ob) as CLRObject;
-            if (co == null)
+            if (GetManagedObject(ob) is not CLRObject co)
             {
                 return Exceptions.RaiseTypeError("invalid object");
             }
@@ -391,9 +393,15 @@ namespace Python.Runtime
                 // workaround for https://bugs.python.org/issue45266 (subtype_clear)
                 using var dict = Runtime.PyObject_GenericGetDict(ob);
                 if (Runtime.PyMapping_HasKey(dict.Borrow(), PyIdentifier.__clear_reentry_guard__) != 0)
+                {
                     return 0;
+                }
+
                 int res = Runtime.PyDict_SetItem(dict.Borrow(), PyIdentifier.__clear_reentry_guard__, Runtime.None);
-                if (res != 0) return res;
+                if (res != 0)
+                {
+                    return res;
+                }
 
                 res = clear(ob);
                 Runtime.PyDict_DelItem(dict.Borrow(), PyIdentifier.__clear_reentry_guard__);
@@ -420,7 +428,7 @@ namespace Python.Runtime
         /// <summary>
         /// Implements __getitem__ for reflected classes and value types.
         /// </summary>
-        static NewReference mp_subscript_impl(BorrowedReference ob, BorrowedReference idx)
+        private static NewReference mp_subscript_impl(BorrowedReference ob, BorrowedReference idx)
         {
             BorrowedReference tp = Runtime.PyObject_TYPE(ob);
             var cls = (ClassBase)GetManagedObject(tp)!;
@@ -450,7 +458,7 @@ namespace Python.Runtime
         /// <summary>
         /// Implements __setitem__ for reflected classes and value types.
         /// </summary>
-        static int mp_ass_subscript_impl(BorrowedReference ob, BorrowedReference idx, BorrowedReference v)
+        private static int mp_ass_subscript_impl(BorrowedReference ob, BorrowedReference idx, BorrowedReference v)
         {
             BorrowedReference tp = Runtime.PyObject_TYPE(ob);
             var cls = (ClassBase)GetManagedObject(tp)!;
@@ -526,12 +534,16 @@ namespace Python.Runtime
             Runtime.PyTuple_SetItem(argsTuple.Borrow(), 0, idx);
             using var result = cls.del.Invoke(ob, argsTuple.Borrow(), kw: null);
             if (result.IsNull())
+            {
                 return -1;
+            }
 
             if (Runtime.PyBool_CheckExact(result.Borrow()))
             {
                 if (Runtime.PyObject_IsTrue(result.Borrow()) != 0)
+                {
                     return 0;
+                }
 
                 Exceptions.SetError(Exceptions.KeyError, "key not found");
                 return -1;
@@ -545,7 +557,7 @@ namespace Python.Runtime
             return 0;
         }
 
-        static NewReference tp_call_impl(BorrowedReference ob, BorrowedReference args, BorrowedReference kw)
+        private static NewReference tp_call_impl(BorrowedReference ob, BorrowedReference args, BorrowedReference kw)
         {
             BorrowedReference tp = Runtime.PyObject_TYPE(ob);
             var self = (ClassBase)GetManagedObject(tp)!;
@@ -567,44 +579,47 @@ namespace Python.Runtime
             return callBinder.Invoke(ob, args, kw);
         }
 
-        static NewReference DoConvert(BorrowedReference ob)
+        private static NewReference DoConvert(BorrowedReference ob)
         {
             var self = (CLRObject)GetManagedObject(ob)!;
             using var python = self.inst.ToPython();
             return python.NewReferenceOrNull();
         }
 
-        static NewReference DoConvertInt(BorrowedReference ob)
+        private static NewReference DoConvertInt(BorrowedReference ob)
         {
             var self = (CLRObject)GetManagedObject(ob)!;
             return Runtime.PyLong_FromLongLong(Convert.ToInt64(self.inst));
         }
 
-        static NewReference DoConvertUInt(BorrowedReference ob)
+        private static NewReference DoConvertUInt(BorrowedReference ob)
         {
             var self = (CLRObject)GetManagedObject(ob)!;
             return Runtime.PyLong_FromUnsignedLongLong(Convert.ToUInt64(self.inst));
         }
 
-        static NewReference DoConvertBooleanInt(BorrowedReference ob)
+        private static NewReference DoConvertBooleanInt(BorrowedReference ob)
         {
             var self = (CLRObject)GetManagedObject(ob)!;
             return Runtime.PyInt_FromInt32((bool)self.inst ? 1 : 0);
         }
 
-        static NewReference DoConvertFloat(BorrowedReference ob)
+        private static NewReference DoConvertFloat(BorrowedReference ob)
         {
             var self = (CLRObject)GetManagedObject(ob)!;
             return Runtime.PyFloat_FromDouble(Convert.ToDouble(self.inst));
         }
 
-        static IEnumerable<MethodInfo> GetCallImplementations(Type type)
+        private static IEnumerable<MethodInfo> GetCallImplementations(Type type)
             => type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(m => m.Name == "__call__");
 
         public virtual void InitializeSlots(BorrowedReference pyType, SlotsHolder slotsHolder)
         {
-            if (!this.type.Valid) return;
+            if (!this.type.Valid)
+            {
+                return;
+            }
 
             if (GetCallImplementations(this.type.Value).Any())
             {
@@ -666,8 +681,10 @@ namespace Python.Runtime
         public override bool Init(BorrowedReference obj, BorrowedReference args, BorrowedReference kw)
         {
             if (this.HasCustomNew())
+            {
                 // initialization must be done in tp_new
                 return true;
+            }
 
             return base.Init(obj, args, kw);
         }

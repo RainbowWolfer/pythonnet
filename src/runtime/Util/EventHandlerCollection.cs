@@ -7,9 +7,9 @@ using System.Security.Permissions;
 namespace Python.Runtime;
 
 [Serializable]
-internal class EventHandlerCollection: Dictionary<object, List<Handler>>
+internal class EventHandlerCollection : Dictionary<object, List<Handler>>
 {
-    readonly EventInfo info;
+    private readonly EventInfo info;
     public EventHandlerCollection(EventInfo @event)
     {
         info = @event;
@@ -84,7 +84,7 @@ internal class EventHandlerCollection: Dictionary<object, List<Handler>>
 
         for (var i = 0; i < list.Count; i++)
         {
-            var item = (Handler)list[i];
+            var item = list[i];
             if (item.hash != hash)
             {
                 continue;

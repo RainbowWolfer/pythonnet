@@ -1,20 +1,17 @@
 using System;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
 
 namespace Python.Runtime
 {
     [Serializable]
     internal struct MaybeType : ISerializable
     {
-        public static implicit operator MaybeType (Type ob) => new(ob);
+        public static implicit operator MaybeType(Type ob) => new(ob);
 
         // The AssemblyQualifiedName of the serialized Type
-        const string SerializationName = "n";
-        readonly string name;
-        readonly Type type;
+        private const string SerializationName = "n";
+        private readonly string name;
+        private readonly Type type;
 
         public string DeletedMessage
         {
@@ -41,7 +38,7 @@ namespace Python.Runtime
 
         public override string ToString()
         {
-            return (type != null ? type.ToString() : $"missing type: {name}");
+            return type != null ? type.ToString() : $"missing type: {name}";
         }
 
         public MaybeType(Type tp)
@@ -53,7 +50,7 @@ namespace Python.Runtime
         private MaybeType(SerializationInfo serializationInfo, StreamingContext context)
         {
             name = (string)serializationInfo.GetValue(SerializationName, typeof(string));
-            type = Type.GetType(name, throwOnError:false);
+            type = Type.GetType(name, throwOnError: false);
         }
 
         public void GetObjectData(SerializationInfo serializationInfo, StreamingContext context)

@@ -85,7 +85,7 @@ namespace Python.Runtime
         /// <summary>
         /// ClassObject __repr__ implementation.
         /// </summary>
-        public new static NewReference tp_repr(BorrowedReference ob)
+        public static new NewReference tp_repr(BorrowedReference ob)
         {
             if (GetManagedObject(ob) is not CLRObject co)
             {
@@ -102,7 +102,7 @@ namespace Python.Runtime
         /// <summary>
         /// Implements __new__ for reflected classes and value types.
         /// </summary>
-        static NewReference tp_new_impl(BorrowedReference tp, BorrowedReference args, BorrowedReference kw)
+        private static NewReference tp_new_impl(BorrowedReference tp, BorrowedReference args, BorrowedReference kw)
         {
             // Sanity check: this ensures a graceful error if someone does
             // something intentially wrong like use the managed metatype for
@@ -174,7 +174,9 @@ namespace Python.Runtime
                 if (Runtime.PyString_Check(ob))
                 {
                     if (Runtime.GetManagedString(ob) is string val)
+                    {
                         result = val;
+                    }
                 }
                 else if (Converter.ToManagedValue(ob, typeof(char[]), out object? arr, false))
                 {
@@ -211,7 +213,9 @@ namespace Python.Runtime
             }
 
             if (result != null)
+            {
                 return CLRObject.GetReference(result!, tp);
+            }
 
             Exceptions.SetError(Exceptions.TypeError, "no constructors match given arguments");
             return default;
@@ -322,7 +326,10 @@ namespace Python.Runtime
 
         public override bool HasCustomNew()
         {
-            if (base.HasCustomNew()) return true;
+            if (base.HasCustomNew())
+            {
+                return true;
+            }
 
             Type clrType = type.Value;
             return clrType.IsPrimitive
@@ -331,7 +338,7 @@ namespace Python.Runtime
                 || IsGenericNullable(clrType);
         }
 
-        static bool IsGenericNullable(Type type)
+        private static bool IsGenericNullable(Type type)
             => type.IsValueType && type.IsGenericType
             && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 
@@ -360,7 +367,7 @@ namespace Python.Runtime
                 allowUnchecked |= (bool)allowObj;
             }
 
-            if (argCount < 1 || argCount > 2)
+            if (argCount is < 1 or > 2)
             {
                 Exceptions.SetError(Exceptions.TypeError, "no constructors match given arguments");
                 return default;

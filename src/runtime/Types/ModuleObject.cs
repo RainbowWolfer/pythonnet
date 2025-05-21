@@ -18,12 +18,12 @@ namespace Python.Runtime
         internal string moduleName;
         internal PyDict dict;
         protected string _namespace;
-        private readonly PyList __all__ = new ();
+        private readonly PyList __all__ = new();
 
         // Attributes to be set on the module according to PEP302 and 451
         // by the import machinery.
-        static readonly HashSet<string?> settableAttributes =
-            new () {"__spec__", "__file__", "__name__", "__path__", "__loader__", "__package__"};
+        private static readonly HashSet<string?> settableAttributes =
+            new() { "__spec__", "__file__", "__name__", "__path__", "__loader__", "__package__" };
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         /// <remarks><seealso cref="dict"/> is initialized in <seealso cref="Create(string)"/></remarks>
@@ -203,7 +203,7 @@ namespace Python.Runtime
             }
         }
 
-        const BindingFlags ModuleMethodFlags = BindingFlags.Public | BindingFlags.Static;
+        private const BindingFlags ModuleMethodFlags = BindingFlags.Public | BindingFlags.Static;
         /// <summary>
         /// Initialize module level functions and attributes
         /// </summary>
@@ -310,7 +310,11 @@ namespace Python.Runtime
 
             try
             {
-                if (name is null) throw new ArgumentNullException();
+                if (name is null)
+                {
+                    throw new ArgumentNullException();
+                }
+
                 attr = self.GetAttribute(name, true);
             }
             catch (Exception e)
@@ -341,15 +345,25 @@ namespace Python.Runtime
         public static int tp_traverse(BorrowedReference ob, IntPtr visit, IntPtr arg)
         {
             var self = (ModuleObject?)GetManagedObject(ob);
-            if (self is null) return 0;
+            if (self is null)
+            {
+                return 0;
+            }
 
             Debug.Assert(self.dict == GetObjectDict(ob));
             int res = PyVisit(self.dict, visit, arg);
-            if (res != 0) return res;
+            if (res != 0)
+            {
+                return res;
+            }
+
             foreach (var attr in self.cache.Values)
             {
                 res = PyVisit(attr, visit, arg);
-                if (res != 0) return res;
+                if (res != 0)
+                {
+                    return res;
+                }
             }
             return 0;
         }
@@ -360,11 +374,11 @@ namespace Python.Runtime
         /// to set a few attributes
         /// </summary>
         [ForbidPythonThreads]
-        public new static int tp_setattro(BorrowedReference ob, BorrowedReference key, BorrowedReference val)
+        public static new int tp_setattro(BorrowedReference ob, BorrowedReference key, BorrowedReference val)
         {
             var managedKey = Runtime.GetManagedString(key);
-            if ((settableAttributes.Contains(managedKey)) ||
-                (ManagedType.GetManagedObject(val) is ModuleObject) )
+            if (settableAttributes.Contains(managedKey) ||
+                (ManagedType.GetManagedObject(val) is ModuleObject))
             {
                 var self = (ModuleObject)ManagedType.GetManagedObject(ob)!;
                 return Runtime.PyDict_SetItem(self.dict, key, val);
@@ -381,7 +395,7 @@ namespace Python.Runtime
             foreach (var pair in cache)
             {
                 if ((Runtime.PyDict_DelItemString(dict, pair.Key) == -1) &&
-                    (Exceptions.ExceptionMatches(Exceptions.KeyError)))
+                    Exceptions.ExceptionMatches(Exceptions.KeyError))
                 {
                     // Trying to remove a key that's not in the dictionary
                     // raises an error. We don't care about it.

@@ -19,7 +19,7 @@ namespace Python.Runtime
         private readonly AssemblyBuilder aBuilder;
         private readonly ModuleBuilder mBuilder;
 
-        const string NamePrefix = "__Python_Runtime_Generated_";
+        private const string NamePrefix = "__Python_Runtime_Generated_";
 
         internal CodeGenerator()
         {
@@ -82,7 +82,7 @@ namespace Python.Runtime
             }
         }
 
-        static string GetUniqueAssemblyName(string name)
+        private static string GetUniqueAssemblyName(string name)
         {
             var taken = new HashSet<string>(AppDomain.CurrentDomain
                                                      .GetAssemblies()
@@ -91,7 +91,9 @@ namespace Python.Runtime
             {
                 string candidate = name + i.ToString(CultureInfo.InvariantCulture);
                 if (!taken.Contains(candidate))
+                {
                     return candidate;
+                }
             }
 
             throw new NotSupportedException("Too many assemblies");

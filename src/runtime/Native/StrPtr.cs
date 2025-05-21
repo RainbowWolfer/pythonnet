@@ -5,17 +5,24 @@ using System.Text;
 namespace Python.Runtime.Native
 {
     [StructLayout(LayoutKind.Sequential)]
-    struct StrPtr : IDisposable
+    internal struct StrPtr : IDisposable
     {
         public IntPtr RawPointer { get; set; }
-        unsafe byte* Bytes => (byte*)this.RawPointer;
+        private unsafe byte* Bytes => (byte*)this.RawPointer;
 
-        public unsafe StrPtr(string value) : this(value, Encodings.UTF8) {}
+        public unsafe StrPtr(string value) : this(value, Encodings.UTF8) { }
 
         public unsafe StrPtr(string value, Encoding encoding)
         {
-            if (value is null) throw new ArgumentNullException(nameof(value));
-            if (encoding is null) throw new ArgumentNullException(nameof(encoding));
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (encoding is null)
+            {
+                throw new ArgumentNullException(nameof(encoding));
+            }
 
             var bytes = encoding.GetBytes(value);
             this.RawPointer = Marshal.AllocHGlobal(checked(bytes.Length + 1));
@@ -33,8 +40,15 @@ namespace Python.Runtime.Native
 
         public unsafe string? ToString(Encoding encoding)
         {
-            if (encoding is null) throw new ArgumentNullException(nameof(encoding));
-            if (this.RawPointer == IntPtr.Zero) return null;
+            if (encoding is null)
+            {
+                throw new ArgumentNullException(nameof(encoding));
+            }
+
+            if (this.RawPointer == IntPtr.Zero)
+            {
+                return null;
+            }
 
             return encoding.GetString((byte*)this.RawPointer, byteCount: checked((int)this.ByteCount));
         }
@@ -43,7 +57,10 @@ namespace Python.Runtime.Native
         {
             get
             {
-                if (this.RawPointer == IntPtr.Zero) throw new NullReferenceException();
+                if (this.RawPointer == IntPtr.Zero)
+                {
+                    throw new NullReferenceException();
+                }
 
                 nuint zeroIndex = 0;
                 while (this.Bytes[zeroIndex] != 0)
@@ -57,7 +74,9 @@ namespace Python.Runtime.Native
         public void Dispose()
         {
             if (this.RawPointer == IntPtr.Zero)
+            {
                 return;
+            }
 
             Marshal.FreeHGlobal(this.RawPointer);
             this.RawPointer = IntPtr.Zero;
@@ -66,7 +85,10 @@ namespace Python.Runtime.Native
         internal static Encoding GetEncodingByPythonName(string pyEncodingName)
         {
             // https://stackoverflow.com/a/7798749/231238
-            if (pyEncodingName == "mbcs") return Encoding.Default;
+            if (pyEncodingName == "mbcs")
+            {
+                return Encoding.Default;
+            }
 
             return Encoding.GetEncoding(pyEncodingName);
         }

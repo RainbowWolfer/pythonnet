@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Linq;
 
 namespace Python.Runtime
 {
@@ -64,19 +63,23 @@ namespace Python.Runtime
             return managedType;
         }
 
-        internal unsafe static int PyVisit(BorrowedReference ob, IntPtr visit, IntPtr arg)
+        internal static unsafe int PyVisit(BorrowedReference ob, IntPtr visit, IntPtr arg)
         {
             if (ob == null)
             {
                 return 0;
             }
-            var visitFunc = (delegate* unmanaged[Cdecl]<BorrowedReference, IntPtr, int>)(visit);
+            var visitFunc = (delegate* unmanaged[Cdecl]<BorrowedReference, IntPtr, int>)visit;
             return visitFunc(ob, arg);
         }
 
         internal static unsafe void DecrefTypeAndFree(StolenReference ob)
         {
-            if (ob == null) throw new ArgumentNullException(nameof(ob));
+            if (ob == null)
+            {
+                throw new ArgumentNullException(nameof(ob));
+            }
+
             var borrowed = new BorrowedReference(ob.DangerousGetAddress());
 
             var type = Runtime.PyObject_TYPE(borrowed);
@@ -97,8 +100,15 @@ namespace Python.Runtime
         /// </summary>
         internal static unsafe int CallTypeClear(BorrowedReference ob, BorrowedReference tp)
         {
-            if (ob == null) throw new ArgumentNullException(nameof(ob));
-            if (tp == null) throw new ArgumentNullException(nameof(tp));
+            if (ob == null)
+            {
+                throw new ArgumentNullException(nameof(ob));
+            }
+
+            if (tp == null)
+            {
+                throw new ArgumentNullException(nameof(tp));
+            }
 
             var clearPtr = Util.ReadIntPtr(tp, TypeOffset.tp_clear);
             if (clearPtr == IntPtr.Zero)
@@ -150,7 +160,9 @@ namespace Python.Runtime
             int instanceDictOffset = Util.ReadInt32(type, TypeOffset.tp_dictoffset);
             // Debug.Assert(instanceDictOffset > 0);
             if (instanceDictOffset > 0)
+            {
                 Runtime.Py_CLEAR(ob, instanceDictOffset);
+            }
         }
 
         protected static BorrowedReference GetObjectDict(BorrowedReference ob)
@@ -163,7 +175,11 @@ namespace Python.Runtime
 
         protected static void SetObjectDict(BorrowedReference ob, StolenReference value)
         {
-            if (value.Pointer == IntPtr.Zero) throw new ArgumentNullException(nameof(value));
+            if (value.Pointer == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             SetObjectDictNullable(ob, value.AnalyzerWorkaround());
         }
         protected static void SetObjectDictNullable(BorrowedReference ob, StolenReference value)
@@ -241,7 +257,10 @@ namespace Python.Runtime
             Debug.Assert(offset > 0);
 
             IntPtr raw = Util.ReadIntPtr(reflectedClrObject, offset);
-            if (raw == IntPtr.Zero) return false;
+            if (raw == IntPtr.Zero)
+            {
+                return false;
+            }
 
             var handle = (GCHandle)raw;
             handle.Free();
@@ -255,13 +274,16 @@ namespace Python.Runtime
             static Offsets()
             {
                 int pyTypeSize = Util.ReadInt32(Runtime.PyTypeType, TypeOffset.tp_basicsize);
-                if (pyTypeSize < 0) throw new InvalidOperationException();
+                if (pyTypeSize < 0)
+                {
+                    throw new InvalidOperationException();
+                }
 
                 tp_clr_inst_offset = pyTypeSize;
                 tp_clr_inst = tp_clr_inst_offset + IntPtr.Size;
             }
             public static int tp_clr_inst_offset { get; }
-            public static int tp_clr_inst { get;  }
+            public static int tp_clr_inst { get; }
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Python.Runtime.Platform
 {
-    interface ILibDL
+    internal interface ILibDL
     {
         IntPtr dlopen(string? fileName, int flags);
         IntPtr dlsym(IntPtr handle, string symbol);
@@ -16,7 +16,7 @@ namespace Python.Runtime.Platform
         IntPtr RTLD_DEFAULT { get; }
     }
 
-    class LinuxLibDL : ILibDL
+    internal class LinuxLibDL : ILibDL
     {
         private const string NativeDll = "libdl.so";
 
@@ -32,7 +32,8 @@ namespace Python.Runtime.Platform
                 // call dlerror to ensure library is resolved
                 libdl2.dlerror();
                 return libdl2;
-            } catch (DllNotFoundException)
+            }
+            catch (DllNotFoundException)
             {
                 return new LinuxLibDL();
             }
@@ -56,7 +57,7 @@ namespace Python.Runtime.Platform
         private static extern IntPtr dlerror();
     }
 
-    class LinuxLibDL2 : ILibDL
+    internal class LinuxLibDL2 : ILibDL
     {
         private const string NativeDll = "libdl.so.2";
 
@@ -82,11 +83,11 @@ namespace Python.Runtime.Platform
         private static extern IntPtr dlerror();
     }
 
-    class MacLibDL : ILibDL
+    internal class MacLibDL : ILibDL
     {
         public int RTLD_NOW => 0x2;
         public int RTLD_GLOBAL => 0x8;
-        const string NativeDll = "/usr/lib/libSystem.dylib";
+        private const string NativeDll = "/usr/lib/libSystem.dylib";
         public IntPtr RTLD_DEFAULT => new(-2);
 
         IntPtr ILibDL.dlopen(string? fileName, int flags) => dlopen(fileName, flags);

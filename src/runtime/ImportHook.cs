@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,7 +50,7 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
             return importlib.machinery.ModuleSpec(fullname, DotNetLoader(), is_package=True)
         return None
             ";
-        const string _available_namespaces = "_available_namespaces";
+        private const string _available_namespaces = "_available_namespaces";
 
         /// <summary>
         /// Initialization performed on startup of the Python runtime.
@@ -150,7 +149,7 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
             RestoreDotNetModules(storage.Modules);
         }
 
-        static void SetupImportHook()
+        private static void SetupImportHook()
         {
             // Create the import hook module
             using var import_hook_module = Runtime.PyModule_New("clr.loader");
@@ -164,12 +163,12 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
             PythonException.ThrowIfIsNull(args);
             using var codeStr = Runtime.PyString_FromString(LoaderCode);
             Runtime.PyTuple_SetItem(args.Borrow(), 0, codeStr.StealOrThrow());
-            
+
             // reference not stolen due to overload incref'ing for us.
             Runtime.PyTuple_SetItem(args.Borrow(), 1, mod_dict);
             Runtime.PyObject_Call(exec, args.Borrow(), default).Dispose();
             // Set as a sub-module of clr.
-            if(Runtime.PyModule_AddObject(ClrModuleReference, "loader", import_hook_module.Steal()) != 0)
+            if (Runtime.PyModule_AddObject(ClrModuleReference, "loader", import_hook_module.Steal()) != 0)
             {
                 throw PythonException.ThrowLastAsClrException();
             }
@@ -188,7 +187,7 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
         /// namespaces is used during the import to verify if we can import a 
         /// CLR assembly as a module or not. The set is stored on the clr module.
         /// </summary>
-        static void SetupNamespaceTracking()
+        private static void SetupNamespaceTracking()
         {
             using var newset = Runtime.PySet_New(default);
             foreach (var ns in AssemblyManager.GetNamespaces())
@@ -208,13 +207,13 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
         /// <summary>
         /// Removes the set of available namespaces from the clr module.
         /// </summary>
-        static void TeardownNameSpaceTracking()
+        private static void TeardownNameSpaceTracking()
         {
             // If the C# runtime isn't loaded, then there are no namespaces available
             Runtime.PyDict_SetItemString(clrModule.dict, _available_namespaces, Runtime.PyNone);
         }
 
-        static readonly ConcurrentQueue<string> addPending = new();
+        private static readonly ConcurrentQueue<string> addPending = new();
         public static void AddNamespace(string name) => addPending.Enqueue(name);
 
         internal static int AddPendingNamespaces()
@@ -232,7 +231,7 @@ class DotNetFinder(importlib.abc.MetaPathFinder):
         {
             using var pyNs = Runtime.PyString_FromString(name);
             var nsSet = Runtime.PyDict_GetItemString(clrModule.dict, _available_namespaces);
-            if (!(nsSet.IsNull  || nsSet == Runtime.PyNone))
+            if (!(nsSet.IsNull || nsSet == Runtime.PyNone))
             {
                 if (Runtime.PySet_Add(nsSet, pyNs.BorrowOrThrow()) != 0)
                 {

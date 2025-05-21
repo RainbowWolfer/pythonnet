@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -7,7 +6,7 @@ using System.Reflection;
 namespace Python.Runtime.Reflection;
 
 [Serializable]
-class ParameterHelper : IEquatable<ParameterInfo>
+internal class ParameterHelper : IEquatable<ParameterInfo>
 {
     public readonly string TypeName;
     public readonly ParameterModifier Modifier;
@@ -50,7 +49,7 @@ class ParameterHelper : IEquatable<ParameterInfo>
         }
     }
 
-    public bool IsSpecialType => TypeName == "&" || TypeName == "[]";
+    public bool IsSpecialType => TypeName is "&" or "[]";
 
     public bool Equals(ParameterInfo other)
     {
@@ -61,19 +60,34 @@ class ParameterHelper : IEquatable<ParameterInfo>
 
     public bool Equals(ParameterHelper other)
     {
-        if (other is null) return false;
+        if (other is null)
+        {
+            return false;
+        }
 
         if (!(other.TypeName == TypeName && other.Modifier == Modifier))
+        {
             return false;
+        }
 
-        if (GenericArguments == other.GenericArguments) return true;
+        if (GenericArguments == other.GenericArguments)
+        {
+            return true;
+        }
 
         if (GenericArguments is not null && other.GenericArguments is not null)
         {
-            if (GenericArguments.Length != other.GenericArguments.Length) return false;
+            if (GenericArguments.Length != other.GenericArguments.Length)
+            {
+                return false;
+            }
+
             for (int arg = 0; arg < GenericArguments.Length; arg++)
             {
-                if (!GenericArguments[arg].Equals(other.GenericArguments[arg])) return false;
+                if (!GenericArguments[arg].Equals(other.GenericArguments[arg]))
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -82,7 +96,7 @@ class ParameterHelper : IEquatable<ParameterInfo>
     }
 }
 
-enum ParameterModifier
+internal enum ParameterModifier
 {
     None,
     In,

@@ -9,9 +9,9 @@ namespace Python.Runtime
     /// Represents a reference to a Python object, that is tracked by Python's reference counting.
     /// </summary>
     [NonCopyable]
-    ref struct NewReference
+    internal ref struct NewReference
     {
-        IntPtr pointer;
+        private IntPtr pointer;
 
         /// <summary>Creates a <see cref="NewReference"/> pointing to the same object</summary>
         [DebuggerHidden]
@@ -36,7 +36,10 @@ namespace Python.Runtime
         /// </summary>
         public PyObject MoveToPyObject()
         {
-            if (this.IsNull()) throw new NullReferenceException();
+            if (this.IsNull())
+            {
+                throw new NullReferenceException();
+            }
 
             return new PyObject(this.StealNullable());
         }
@@ -55,7 +58,10 @@ namespace Python.Runtime
         /// <summary>Moves ownership of this instance to unmanged pointer</summary>
         public IntPtr DangerousMoveToPointer()
         {
-            if (this.IsNull()) throw new NullReferenceException();
+            if (this.IsNull())
+            {
+                throw new NullReferenceException();
+            }
 
             var result = this.pointer;
             this.pointer = IntPtr.Zero;
@@ -92,7 +98,10 @@ namespace Python.Runtime
         [DebuggerHidden]
         public StolenReference Steal()
         {
-            if (this.IsNull()) throw new NullReferenceException();
+            if (this.IsNull())
+            {
+                throw new NullReferenceException();
+            }
 
             return this.StealNullable();
         }
@@ -101,7 +110,10 @@ namespace Python.Runtime
         [DebuggerHidden]
         public StolenReference StealOrThrow()
         {
-            if (this.IsNull()) throw PythonException.ThrowLastAsClrException();
+            if (this.IsNull())
+            {
+                throw PythonException.ThrowLastAsClrException();
+            }
 
             return this.StealNullable();
         }
@@ -124,7 +136,7 @@ namespace Python.Runtime
         /// </summary>
         [Pure]
         public static NewReference DangerousFromPointer(IntPtr pointer)
-            => new() { pointer = pointer};
+            => new() { pointer = pointer };
 
         [Pure]
         internal static IntPtr DangerousGetAddressOrNull(in NewReference reference) => reference.pointer;
@@ -142,7 +154,7 @@ namespace Python.Runtime
     /// because <c>this</c> is always passed by value, which we need to avoid.
     /// (note <code>this in NewReference</code> vs the usual <code>this NewReference</code>)
     /// </summary>
-    static class NewReferenceExtensions
+    internal static class NewReferenceExtensions
     {
         /// <summary>Gets a raw pointer to the Python object</summary>
         [Pure]

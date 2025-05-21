@@ -1,7 +1,6 @@
-using System.Linq;
 using System;
 using System.Collections.Generic;
-using System.Resources;
+using System.Linq;
 
 namespace Python.Runtime
 {

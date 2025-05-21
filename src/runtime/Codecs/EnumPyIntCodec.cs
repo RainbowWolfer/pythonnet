@@ -21,11 +21,17 @@ namespace Python.Runtime.Codecs
         public bool TryDecode<T>(PyObject pyObj, out T? value)
         {
             value = default;
-            if (!typeof(T).IsEnum) return false;
+            if (!typeof(T).IsEnum)
+            {
+                return false;
+            }
 
             Type etype = Enum.GetUnderlyingType(typeof(T));
 
-            if (!PyInt.IsIntType(pyObj)) return false;
+            if (!PyInt.IsIntType(pyObj))
+            {
+                return false;
+            }
 
             object? result;
             try
@@ -48,10 +54,16 @@ namespace Python.Runtime.Codecs
 
         public PyObject? TryEncode(object value)
         {
-            if (value is null) return null;
+            if (value is null)
+            {
+                return null;
+            }
 
             var enumType = value.GetType();
-            if (!enumType.IsEnum) return null;
+            if (!enumType.IsEnum)
+            {
+                return null;
+            }
 
             try
             {

@@ -19,9 +19,13 @@ namespace Python.Runtime
         /// <remarks>This constructor does not check if <paramref name="o"/> is actually iterable.</remarks>
         public PyIterable(PyObject o) : base(FromObject(o)) { }
 
-        static BorrowedReference FromObject(PyObject o)
+        private static BorrowedReference FromObject(PyObject o)
         {
-            if (o is null) throw new ArgumentNullException(nameof(o));
+            if (o is null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
             return o.Reference;
         }
 

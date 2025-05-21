@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Python.Runtime.CollectionWrappers
 {
@@ -11,7 +11,10 @@ namespace Python.Runtime.CollectionWrappers
         public IterableWrapper(PyObject pyObj)
         {
             if (pyObj == null)
+            {
                 throw new ArgumentNullException();
+            }
+
             pyObject = new PyObject(pyObj.Reference);
         }
 

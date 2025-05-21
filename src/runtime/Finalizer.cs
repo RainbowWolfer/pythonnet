@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Python.Runtime
 {
@@ -27,16 +24,16 @@ namespace Python.Runtime
             public Exception Error { get; }
         }
 
-        public static Finalizer Instance { get; } = new ();
+        public static Finalizer Instance { get; } = new();
 
         public event EventHandler<CollectArgs>? BeforeCollect;
         public event EventHandler<ErrorArgs>? ErrorHandler;
 
-        const int DefaultThreshold = 200;
+        private const int DefaultThreshold = 200;
         [DefaultValue(DefaultThreshold)]
         public int Threshold { get; set; } = DefaultThreshold;
 
-        bool started;
+        private bool started;
 
         [DefaultValue(true)]
         public bool Enable { get; set; } = true;
@@ -70,12 +67,16 @@ namespace Python.Runtime
         internal class IncorrectRefCountException : Exception
         {
             public IntPtr PyPtr { get; internal set; }
-            string? message;
+            private string? message;
             public override string Message
             {
                 get
                 {
-                    if (message is not null) return message;
+                    if (message is not null)
+                    {
+                        return message;
+                    }
+
                     var gil = PythonEngine.AcquireLock();
                     try
                     {
@@ -94,14 +95,14 @@ namespace Python.Runtime
             internal IncorrectRefCountException(IntPtr ptr)
             {
                 PyPtr = ptr;
-                
+
             }
         }
 
         internal delegate bool IncorrectRefCntHandler(object sender, IncorrectFinalizeArgs e);
-        #pragma warning disable 414
+#pragma warning disable 414
         internal event IncorrectRefCntHandler? IncorrectRefCntResolver = null;
-        #pragma warning restore 414
+#pragma warning restore 414
         internal bool ThrowIfUnhandleIncorrectRefCount { get; set; } = true;
 
         #endregion
@@ -111,10 +112,17 @@ namespace Python.Runtime
 
         internal void ThrottledCollect()
         {
-            if (!started) throw new InvalidOperationException($"{nameof(PythonEngine)} is not initialized");
+            if (!started)
+            {
+                throw new InvalidOperationException($"{nameof(PythonEngine)} is not initialized");
+            }
 
             _throttled = unchecked(this._throttled + 1);
-            if (!started || !Enable || _throttled < Threshold) return;
+            if (!started || !Enable || _throttled < Threshold)
+            {
+                return;
+            }
+
             _throttled = 0;
             this.Collect();
         }
@@ -142,8 +150,10 @@ namespace Python.Runtime
             lock (_queueLock)
 #endif
             {
-                this._objQueue.Enqueue(new PendingFinalization {
-                    PyObj = obj, RuntimeRun = run,
+                this._objQueue.Enqueue(new PendingFinalization
+                {
+                    PyObj = obj,
+                    RuntimeRun = run,
 #if TRACE_ALLOC
                     StackTrace = stackTrace.ToString(),
 #endif
@@ -155,7 +165,9 @@ namespace Python.Runtime
         internal void AddDerivedFinalizedObject(ref IntPtr derived, int run)
         {
             if (derived == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(derived));
+            }
 
             if (!Enable)
             {
@@ -170,10 +182,14 @@ namespace Python.Runtime
         internal void AddFinalizedBuffer(ref Py_buffer buffer)
         {
             if (buffer.obj == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(buffer));
+            }
 
             if (!Enable)
+            {
                 return;
+            }
 
             var pending = buffer;
             buffer = default;
@@ -194,7 +210,9 @@ namespace Python.Runtime
         internal nint DisposeAll(bool disposeObj = true, bool disposeDerived = true, bool disposeBuffer = true)
         {
             if (_objQueue.IsEmpty && _derivedQueue.IsEmpty && _bufferQueue.IsEmpty)
+            {
                 return 0;
+            }
 
             nint collected = 0;
 
@@ -216,55 +234,70 @@ namespace Python.Runtime
 
                 try
                 {
-                    if (disposeObj) while (!_objQueue.IsEmpty)
+                    if (disposeObj)
                     {
-                        if (!_objQueue.TryDequeue(out var obj))
-                            continue;
+                        while (!_objQueue.IsEmpty)
+                        {
+                            if (!_objQueue.TryDequeue(out var obj))
+                            {
+                                continue;
+                            }
 
-                        if (obj.RuntimeRun != run)
-                        {
-                            HandleFinalizationException(obj.PyObj, new RuntimeShutdownException(obj.PyObj));
-                            continue;
-                        }
+                            if (obj.RuntimeRun != run)
+                            {
+                                HandleFinalizationException(obj.PyObj, new RuntimeShutdownException(obj.PyObj));
+                                continue;
+                            }
 
-                        IntPtr copyForException = obj.PyObj;
-                        Runtime.XDecref(StolenReference.Take(ref obj.PyObj));
-                        collected++;
-                        try
-                        {
-                            Runtime.CheckExceptionOccurred();
-                        }
-                        catch (Exception e)
-                        {
-                            HandleFinalizationException(obj.PyObj, e);
+                            IntPtr copyForException = obj.PyObj;
+                            Runtime.XDecref(StolenReference.Take(ref obj.PyObj));
+                            collected++;
+                            try
+                            {
+                                Runtime.CheckExceptionOccurred();
+                            }
+                            catch (Exception e)
+                            {
+                                HandleFinalizationException(obj.PyObj, e);
+                            }
                         }
                     }
 
-                    if (disposeDerived) while (!_derivedQueue.IsEmpty)
+                    if (disposeDerived)
                     {
-                        if (!_derivedQueue.TryDequeue(out var derived))
-                            continue;
-
-                        if (derived.RuntimeRun != run)
+                        while (!_derivedQueue.IsEmpty)
                         {
-                            HandleFinalizationException(derived.PyObj, new RuntimeShutdownException(derived.PyObj));
-                            continue;
-                        }
+                            if (!_derivedQueue.TryDequeue(out var derived))
+                            {
+                                continue;
+                            }
+
+                            if (derived.RuntimeRun != run)
+                            {
+                                HandleFinalizationException(derived.PyObj, new RuntimeShutdownException(derived.PyObj));
+                                continue;
+                            }
 
 #pragma warning disable CS0618 // Type or member is obsolete. OK for internal use
-                        PythonDerivedType.Finalize(derived.PyObj);
+                            PythonDerivedType.Finalize(derived.PyObj);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-                        collected++;
+                            collected++;
+                        }
                     }
 
-                    if (disposeBuffer) while (!_bufferQueue.IsEmpty)
+                    if (disposeBuffer)
                     {
-                        if (!_bufferQueue.TryDequeue(out var buffer))
-                            continue;
+                        while (!_bufferQueue.IsEmpty)
+                        {
+                            if (!_bufferQueue.TryDequeue(out var buffer))
+                            {
+                                continue;
+                            }
 
-                        Runtime.PyBuffer_Release(ref buffer);
-                        collected++;
+                            Runtime.PyBuffer_Release(ref buffer);
+                            collected++;
+                        }
                     }
                 }
                 finally
@@ -277,7 +310,7 @@ namespace Python.Runtime
             return collected;
         }
 
-        void HandleFinalizationException(IntPtr obj, Exception cause)
+        private void HandleFinalizationException(IntPtr obj, Exception cause)
         {
             var errorArgs = new ErrorArgs(cause);
 
@@ -360,7 +393,7 @@ namespace Python.Runtime
 #endif
     }
 
-    struct PendingFinalization
+    internal struct PendingFinalization
     {
         public IntPtr PyObj;
         public BorrowedReference Ref => new(PyObj);
@@ -397,14 +430,22 @@ namespace Python.Runtime
         public FinalizationException(string message, IntPtr disposable, Exception innerException)
             : base(message, innerException)
         {
-            if (disposable == IntPtr.Zero) throw new ArgumentNullException(nameof(disposable));
+            if (disposable == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(disposable));
+            }
+
             this.Handle = disposable;
         }
 
         protected FinalizationException(string message, IntPtr disposable)
             : base(message)
         {
-            if (disposable == IntPtr.Zero) throw new ArgumentNullException(nameof(disposable));
+            if (disposable == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(disposable));
+            }
+
             this.Handle = disposable;
         }
     }

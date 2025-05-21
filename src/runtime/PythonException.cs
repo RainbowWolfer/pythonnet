@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
@@ -147,7 +146,10 @@ namespace Python.Runtime
 
         private static ExceptionDispatchInfo? TryGetDispatchInfo(BorrowedReference exception)
         {
-            if (exception.IsNull) return null;
+            if (exception.IsNull)
+            {
+                return null;
+            }
 
             using var pyInfo = Runtime.PyObject_GetAttrString(exception, Exceptions.DispatchInfoAttribute);
             if (pyInfo.IsNull())
@@ -173,7 +175,10 @@ namespace Python.Runtime
         private static Exception FromPyErr(BorrowedReference typeRef, BorrowedReference valRef, BorrowedReference tbRef,
                                            out ExceptionDispatchInfo? exceptionDispatchInfo)
         {
-            if (valRef == null) throw new ArgumentNullException(nameof(valRef));
+            if (valRef == null)
+            {
+                throw new ArgumentNullException(nameof(valRef));
+            }
 
             var type = PyType.FromReference(typeRef);
             var value = new PyObject(valRef);
@@ -214,8 +219,15 @@ namespace Python.Runtime
 
             var errorDict = new PyDict();
             errorDict["type"] = type;
-            if (value is not null) errorDict["value"] = value;
-            if (traceback is not null) errorDict["traceback"] = traceback;
+            if (value is not null)
+            {
+                errorDict["value"] = value;
+            }
+
+            if (traceback is not null)
+            {
+                errorDict["traceback"] = traceback;
+            }
 
             return errorDict;
         }
@@ -236,7 +248,10 @@ namespace Python.Runtime
 
         private static Exception? FromCause(BorrowedReference cause)
         {
-            if (cause == null || cause.IsNone()) return null;
+            if (cause == null || cause.IsNone())
+            {
+                return null;
+            }
 
             Debug.Assert(Runtime.PyObject_TypeCheck(cause, Exceptions.BaseException));
 
@@ -251,7 +266,10 @@ namespace Python.Runtime
 
         private static string GetMessage(PyObject? value, PyType type)
         {
-            if (type is null) throw new ArgumentNullException(nameof(type));
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             if (value != null && !value.IsNone())
             {
@@ -319,10 +337,15 @@ namespace Python.Runtime
         {
             get
             {
-                if (Traceback is null) return base.StackTrace;
+                if (Traceback is null)
+                {
+                    return base.StackTrace;
+                }
 
                 if (!PythonEngine.IsInitialized && Runtime.Py_IsInitialized() == 0)
+                {
                     return "Python stack unavailable as runtime was shut down\n" + base.StackTrace;
+                }
 
                 using var _ = new Py.GILState();
                 return TracebackToString(Traceback) + base.StackTrace;
@@ -333,7 +356,10 @@ namespace Python.Runtime
         {
             get
             {
-                if (Value is null) return false;
+                if (Value is null)
+                {
+                    return false;
+                }
 
                 CheckRuntimeIsRunning();
 
@@ -352,7 +378,10 @@ namespace Python.Runtime
             PyGILState gs = PythonEngine.AcquireLock();
             try
             {
-                if (Exceptions.ErrorOccurred()) throw new InvalidOperationException("Cannot normalize when an error is set");
+                if (Exceptions.ErrorOccurred())
+                {
+                    throw new InvalidOperationException("Cannot normalize when an error is set");
+                }
 
                 // If an error is set and this PythonException is unnormalized, the error will be cleared and the PythonException will be replaced by a different error.
                 NewReference value = Value.NewReferenceOrNull();
@@ -365,7 +394,7 @@ namespace Python.Runtime
                 Type = new PyType(type.Steal());
                 try
                 {
-                    Debug.Assert(Traceback is null == tb.IsNull());
+                    Debug.Assert((Traceback is null) == tb.IsNull());
                     if (!tb.IsNull())
                     {
                         Debug.Assert(Traceback!.Reference == tb.Borrow());
@@ -399,7 +428,9 @@ namespace Python.Runtime
             copy.Normalize();
 
             if (copy.Traceback is null || copy.Value is null)
+            {
                 return StackTrace;
+            }
 
             using var traceback = PyModule.Import("traceback");
             var buffer = new StringBuilder();
@@ -458,7 +489,9 @@ namespace Python.Runtime
         private static void CheckRuntimeIsRunning()
         {
             if (!PythonEngine.IsInitialized && Runtime.Py_IsInitialized() == 0)
+            {
                 throw new InvalidOperationException("Python runtime must be running");
+            }
         }
 
         /// <summary>

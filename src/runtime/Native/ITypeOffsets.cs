@@ -7,7 +7,7 @@ namespace Python.Runtime.Native
     [SuppressMessage("Style", "IDE1006:Naming Styles",
                      Justification = "Following CPython",
                      Scope = "type")]
-    interface ITypeOffsets
+    internal interface ITypeOffsets
     {
         int bf_getbuffer { get; }
         int mp_ass_subscript { get; }

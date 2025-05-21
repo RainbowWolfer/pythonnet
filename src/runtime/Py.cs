@@ -29,7 +29,10 @@ public static class Py
 
         public virtual void Dispose()
         {
-            if (this.isDisposed) return;
+            if (this.isDisposed)
+            {
+                return;
+            }
 
             PythonEngine.ReleaseLock(state);
             GC.SuppressFinalize(this);
@@ -44,7 +47,7 @@ public static class Py
 
     public class DebugGILState : GILState
     {
-        readonly Thread owner;
+        private readonly Thread owner;
         internal DebugGILState() : base()
         {
             this.owner = Thread.CurrentThread;
@@ -52,7 +55,9 @@ public static class Py
         public override void Dispose()
         {
             if (this.owner != Thread.CurrentThread)
+            {
                 throw new InvalidOperationException("GIL must always be released from the same thread, that acquired it");
+            }
 
             base.Dispose();
         }
@@ -78,7 +83,9 @@ public static class Py
         for (var i = 0; i < kv.Length; i += 2)
         {
             if (kv[i] is not string key)
+            {
                 throw new ArgumentException("Keys must be non-null strings");
+            }
 
             BorrowedReference value;
             NewReference temp = default;
@@ -132,7 +139,10 @@ public static class Py
 
     public static void SetArgv(IEnumerable<string> argv)
     {
-        if (argv is null) throw new ArgumentNullException(nameof(argv));
+        if (argv is null)
+        {
+            throw new ArgumentNullException(nameof(argv));
+        }
 
         using (GIL())
         {
@@ -144,8 +154,15 @@ public static class Py
 
     public static void With(PyObject obj, Action<PyObject> Body)
     {
-        if (obj is null) throw new ArgumentNullException(nameof(obj));
-        if (Body is null) throw new ArgumentNullException(nameof(Body));
+        if (obj is null)
+        {
+            throw new ArgumentNullException(nameof(obj));
+        }
+
+        if (Body is null)
+        {
+            throw new ArgumentNullException(nameof(Body));
+        }
 
         // Behavior described here:
         // https://docs.python.org/2/reference/datamodel.html#with-statement-context-managers
@@ -176,7 +193,10 @@ public static class Py
 
         var exitResult = obj.InvokeMethod("__exit__", type, val, traceBack);
 
-        if (ex != null && !exitResult.IsTrue()) throw ex;
+        if (ex != null && !exitResult.IsTrue())
+        {
+            throw ex;
+        }
     }
 
     public static void With(PyObject obj, Action<dynamic> Body)

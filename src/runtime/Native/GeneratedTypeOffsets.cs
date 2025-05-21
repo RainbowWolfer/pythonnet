@@ -5,7 +5,7 @@ namespace Python.Runtime.Native
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Sequential)]
-    abstract class GeneratedTypeOffsets
+    internal abstract class GeneratedTypeOffsets
     {
         protected GeneratedTypeOffsets()
         {

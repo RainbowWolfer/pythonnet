@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace Python.Runtime.Mixins
 {
-    class CollectionMixinsProvider : IPythonBaseTypeProvider, IDisposable
+    internal class CollectionMixinsProvider : IPythonBaseTypeProvider, IDisposable
     {
-        readonly Lazy<PyObject> mixinsModule;
+        private readonly Lazy<PyObject> mixinsModule;
         public CollectionMixinsProvider(Lazy<PyObject> mixinsModule)
         {
             this.mixinsModule = mixinsModule ?? throw new ArgumentNullException(nameof(mixinsModule));
@@ -17,10 +17,14 @@ namespace Python.Runtime.Mixins
         public IEnumerable<PyType> GetBaseTypes(Type type, IList<PyType> existingBases)
         {
             if (type is null)
+            {
                 throw new ArgumentNullException(nameof(type));
+            }
 
             if (existingBases is null)
+            {
                 throw new ArgumentNullException(nameof(existingBases));
+            }
 
             var interfaces = NewInterfaces(type).Select(GetDefinition).ToArray();
 
@@ -76,7 +80,7 @@ namespace Python.Runtime.Mixins
             return newBases;
         }
 
-        static Type[] NewInterfaces(Type type)
+        private static Type[] NewInterfaces(Type type)
         {
             var result = type.GetInterfaces();
             return type.BaseType != null
@@ -84,7 +88,7 @@ namespace Python.Runtime.Mixins
                 : result;
         }
 
-        static Type GetDefinition(Type type)
+        private static Type GetDefinition(Type type)
             => type.IsGenericType ? type.GetGenericTypeDefinition() : type;
 
         public void Dispose()

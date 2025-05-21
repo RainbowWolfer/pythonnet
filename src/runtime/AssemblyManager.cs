@@ -37,7 +37,7 @@ namespace Python.Runtime
 
         // modified from event handlers below, potentially triggered from different .NET threads
         private static readonly ConcurrentQueue<Assembly> assemblies = new();
-        internal static readonly List<string> pypath = new (capacity: 16);
+        internal static readonly List<string> pypath = new(capacity: 16);
         private AssemblyManager()
         {
         }
@@ -172,7 +172,10 @@ namespace Python.Runtime
         /// </summary>
         public static string FindAssembly(AssemblyName name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             return FindAssembly(name.Name);
         }
@@ -184,12 +187,15 @@ namespace Python.Runtime
         /// </summary>
         public static string FindAssembly(string name)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
             return FindAssemblyCandidates(name).FirstOrDefault();
         }
 
-        static IEnumerable<string> FindAssemblyCandidates(string name)
+        private static IEnumerable<string> FindAssemblyCandidates(string name)
         {
             foreach (string head in pypath)
             {
@@ -241,7 +247,11 @@ namespace Python.Runtime
         public static Assembly? LoadAssemblyPath(string name)
         {
             string path = FindAssembly(name);
-            if (path == null) return null;
+            if (path == null)
+            {
+                return null;
+            }
+
             return Assembly.LoadFrom(path);
         }
 
@@ -344,7 +354,7 @@ namespace Python.Runtime
         /// Returns an enumerable collection containing the namepsaces exported
         /// by loaded assemblies in the current app domain.
         /// </summary>
-        public static IEnumerable<string> GetNamespaces ()
+        public static IEnumerable<string> GetNamespaces()
         {
             return namespaces.Keys;
         }
@@ -437,6 +447,6 @@ namespace Python.Runtime
             }
         }
 
-        static bool IsExported(Type type) => type.GetCustomAttribute<PyExportAttribute>()?.Export != false;
+        private static bool IsExported(Type type) => type.GetCustomAttribute<PyExportAttribute>()?.Export != false;
     }
 }

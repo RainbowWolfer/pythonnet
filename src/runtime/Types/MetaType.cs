@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
@@ -188,7 +187,10 @@ namespace Python.Runtime
 
             var flags = PyType.GetFlags(type.Borrow());
             if (!flags.HasFlag(TypeFlags.Ready))
+            {
                 throw new NotSupportedException("PyType.tp_new returned an incomplete type");
+            }
+
             flags |= TypeFlags.HasClrInstance;
             flags |= TypeFlags.HeapType;
             flags |= TypeFlags.BaseType;

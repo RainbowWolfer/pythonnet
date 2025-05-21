@@ -1,18 +1,22 @@
 namespace Python.Runtime.Codecs
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
 
     public sealed class TupleCodec<TTuple> : IPyObjectEncoder, IPyObjectDecoder
     {
-        TupleCodec() { }
+        private TupleCodec()
+        { }
         public static TupleCodec<TTuple> Instance { get; } = new TupleCodec<TTuple>();
 
         public bool CanEncode(Type type)
         {
-            if (type == typeof(object) || type == typeof(TTuple)) return true;
+            if (type == typeof(object) || type == typeof(TTuple))
+            {
+                return true;
+            }
+
             return type.Namespace == typeof(TTuple).Namespace
                    // generic versions of tuples are named Tuple`TYPE_ARG_COUNT
                    && type.Name.StartsWith(typeof(TTuple).Name + '`');
@@ -20,12 +24,26 @@ namespace Python.Runtime.Codecs
 
         public PyObject? TryEncode(object value)
         {
-            if (value == null) return null;
+            if (value == null)
+            {
+                return null;
+            }
 
             var tupleType = value.GetType();
-            if (tupleType == typeof(object)) return null;
-            if (!this.CanEncode(tupleType)) return null;
-            if (tupleType == typeof(TTuple)) return new PyTuple();
+            if (tupleType == typeof(object))
+            {
+                return null;
+            }
+
+            if (!this.CanEncode(tupleType))
+            {
+                return null;
+            }
+
+            if (tupleType == typeof(TTuple))
+            {
+                return new PyTuple();
+            }
 
             nint fieldCount = tupleType.GetGenericArguments().Length;
             using var tuple = Runtime.PyTuple_New(fieldCount);
@@ -47,11 +65,17 @@ namespace Python.Runtime.Codecs
 
         public bool TryDecode<T>(PyObject pyObj, out T? value)
         {
-            if (pyObj == null) throw new ArgumentNullException(nameof(pyObj));
+            if (pyObj == null)
+            {
+                throw new ArgumentNullException(nameof(pyObj));
+            }
 
             value = default;
 
-            if (!Runtime.PyTuple_Check(pyObj)) return false;
+            if (!Runtime.PyTuple_Check(pyObj))
+            {
+                return false;
+            }
 
             if (typeof(T) == typeof(object))
             {
@@ -67,7 +91,10 @@ namespace Python.Runtime.Codecs
 
             var itemTypes = typeof(T).GetGenericArguments();
             nint itemCount = Runtime.PyTuple_Size(pyObj);
-            if (itemTypes.Length != itemCount) return false;
+            if (itemTypes.Length != itemCount)
+            {
+                return false;
+            }
 
             if (itemCount == 0)
             {
@@ -90,7 +117,7 @@ namespace Python.Runtime.Codecs
             return true;
         }
 
-        static bool Decode(PyObject tuple, out object? value)
+        private static bool Decode(PyObject tuple, out object? value)
         {
             long itemCount = Runtime.PyTuple_Size(tuple);
             if (itemCount == 0)
@@ -118,13 +145,13 @@ namespace Python.Runtime.Codecs
             return true;
         }
 
-        static readonly MethodInfo[] tupleCreate =
+        private static readonly MethodInfo[] tupleCreate =
             typeof(TTuple).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.Name == nameof(Tuple.Create))
                 .OrderBy(m => m.GetParameters().Length)
                 .ToArray();
 
-        static readonly object EmptyTuple = tupleCreate[0].Invoke(null, parameters: new object[0]);
+        private static readonly object EmptyTuple = tupleCreate[0].Invoke(null, parameters: new object[0]);
 
         public static void Register()
         {

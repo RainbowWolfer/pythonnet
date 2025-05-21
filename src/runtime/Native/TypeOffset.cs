@@ -14,7 +14,7 @@ namespace Python.Runtime
     [SuppressMessage("Style", "IDE1006:Naming Styles",
                      Justification = "Following CPython",
                      Scope = "type")]
-    static partial class TypeOffset
+    internal static partial class TypeOffset
     {
         internal static int bf_getbuffer { get; private set; }
         internal static int mp_ass_subscript { get; private set; }
@@ -80,7 +80,10 @@ namespace Python.Runtime
 
         internal static void Use(ITypeOffsets offsets, int extraHeadOffset)
         {
-            if (offsets is null) throw new ArgumentNullException(nameof(offsets));
+            if (offsets is null)
+            {
+                throw new ArgumentNullException(nameof(offsets));
+            }
 
             slotNames.Clear();
             var offsetProperties = typeof(TypeOffset).GetProperties(FieldFlags);
@@ -100,10 +103,10 @@ namespace Python.Runtime
             SlotOffsets = GetOffsets();
         }
 
-        static readonly BindingFlags FieldFlags = BindingFlags.NonPublic | BindingFlags.Static;
+        private static readonly BindingFlags FieldFlags = BindingFlags.NonPublic | BindingFlags.Static;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Initialized in ABI.cs
-        static Dictionary<string, int> SlotOffsets;
+        private static Dictionary<string, int> SlotOffsets;
 #pragma warning restore CS8618
         internal static Dictionary<string, int> GetOffsets()
         {
@@ -123,24 +126,26 @@ namespace Python.Runtime
         public static string? GetSlotName(int offset)
             => SlotOffsets.FirstOrDefault(kv => kv.Value == offset).Key;
 
-        static readonly HashSet<string> slotNames = new();
+        private static readonly HashSet<string> slotNames = new();
         internal static bool IsSupportedSlotName(string name) => slotNames.Contains(name);
 
         [Conditional("DEBUG")]
-        static void ValidateUnusedTypeOffsetProperties(PropertyInfo[] offsetProperties)
+        private static void ValidateUnusedTypeOffsetProperties(PropertyInfo[] offsetProperties)
         {
             var extras = new List<string>();
             foreach (var property in typeof(ITypeOffsets).GetProperties(FieldFlags))
             {
                 if (!offsetProperties.Any(prop => prop.Name == property.Name))
+                {
                     extras.Add(property.Name);
+                }
             }
             extras.Sort();
             Debug.Assert(extras.Count == 0, message: string.Join(", ", extras));
         }
 
         [Conditional("DEBUG")]
-        static void ValidateRequiredOffsetsPresent(PropertyInfo[] offsetProperties)
+        private static void ValidateRequiredOffsetsPresent(PropertyInfo[] offsetProperties)
         {
             var present = new HashSet<string>(offsetProperties.Select(p => p.Name));
             var missing = new HashSet<string>();
@@ -152,9 +157,13 @@ namespace Python.Runtime
             foreach (var managedType in managedTypes)
             {
                 var slots = managedType.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                foreach(var slot in slots)
+                foreach (var slot in slots)
+                {
                     if (!present.Contains(slot.Name))
+                    {
                         missing.Add(slot.Name);
+                    }
+                }
             }
             foreach (string notSlot in new[]
             {
@@ -177,7 +186,9 @@ namespace Python.Runtime
                 "set_SuppressOverloads",
                 "setPreload",
             })
+            {
                 missing.Remove(notSlot);
+            }
 
             Debug.Assert(missing.Count == 0,
                          "Missing slots: " + string.Join(", ", missing));

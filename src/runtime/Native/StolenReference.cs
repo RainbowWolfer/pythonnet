@@ -10,12 +10,12 @@ namespace Python.Runtime
     /// and internal <see cref="PyObject"/> constructors.
     /// </summary>
     [NonCopyable]
-    readonly ref struct StolenReference
+    internal readonly ref struct StolenReference
     {
         internal readonly IntPtr Pointer;
 
         [DebuggerHidden]
-        StolenReference(IntPtr pointer)
+        private StolenReference(IntPtr pointer)
         {
             Pointer = pointer;
         }
@@ -23,7 +23,11 @@ namespace Python.Runtime
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StolenReference Take(ref IntPtr ptr)
         {
-            if (ptr == IntPtr.Zero) throw new ArgumentNullException(nameof(ptr));
+            if (ptr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(ptr));
+            }
+
             return TakeNullable(ref ptr);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +50,9 @@ namespace Python.Runtime
         public override bool Equals(object obj)
         {
             if (obj is IntPtr ptr)
+            {
                 return ptr == Pointer;
+            }
 
             return false;
         }
@@ -57,12 +63,16 @@ namespace Python.Runtime
         [Pure]
         public static StolenReference DangerousFromPointer(IntPtr ptr)
         {
-            if (ptr == IntPtr.Zero) throw new ArgumentNullException(nameof(ptr));
+            if (ptr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(ptr));
+            }
+
             return new StolenReference(ptr);
         }
     }
 
-    static class StolenReferenceExtensions
+    internal static class StolenReferenceExtensions
     {
         [Pure]
         [DebuggerHidden]

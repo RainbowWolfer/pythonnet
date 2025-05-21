@@ -6,11 +6,11 @@ using System.Reflection;
 
 namespace Python.Runtime
 {
-    static partial class InternString
+    internal static partial class InternString
     {
         private static readonly Dictionary<string, PyString> _string2interns = new();
         private static readonly Dictionary<IntPtr, string> _intern2strings = new();
-        const BindingFlags PyIdentifierFieldFlags = BindingFlags.Static | BindingFlags.NonPublic;
+        private const BindingFlags PyIdentifierFieldFlags = BindingFlags.Static | BindingFlags.NonPublic;
 
         static InternString()
         {

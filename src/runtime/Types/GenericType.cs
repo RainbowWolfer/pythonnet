@@ -43,7 +43,7 @@ namespace Python.Runtime
             return default;
         }
 
-        static NewReference AsGenericInterface(BorrowedReference instance, Type targetType)
+        private static NewReference AsGenericInterface(BorrowedReference instance, Type targetType)
         {
             if (GetManagedObject(instance) is not CLRObject obj)
             {

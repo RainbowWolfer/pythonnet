@@ -7,7 +7,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
