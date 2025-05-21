@@ -20,6 +20,26 @@ namespace Python.Runtime
     /// </summary>
     public unsafe partial class Runtime
     {
+        private static _Delegates delegates;
+
+        internal static _Delegates Delegates
+        {
+            get
+            {
+                if (delegates is null)
+                {
+                    ReloadDelegates();
+                }
+                return delegates;
+            }
+            set => delegates = value;
+        }
+
+        public static void ReloadDelegates()
+        {
+            Delegates = new _Delegates(PythonDLL);
+        }
+
         public static string? PythonDLL
         {
             get => _PythonDll;
@@ -537,6 +557,7 @@ namespace Python.Runtime
         internal static PyObject InteropModule => clrInterop.Value;
 
         private static Lazy<PyObject> hexCallable;
+
         internal static PyObject HexCallable => hexCallable.Value;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 

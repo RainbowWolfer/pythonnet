@@ -114,6 +114,7 @@ namespace Python.Runtime
             }
             set
             {
+                Runtime.ReloadDelegates();
                 // this value is null in the beginning
                 Marshal.FreeHGlobal(_pythonHome);
                 _pythonHome = UcsMarshaler.Py3UnicodePy2StringtoPtr(value);

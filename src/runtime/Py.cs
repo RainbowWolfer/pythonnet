@@ -22,21 +22,36 @@ public static class Py
         private readonly PyGILState state;
         private bool isDisposed;
 
+        private readonly bool isEngineValid;
+
         internal GILState()
         {
-            state = PythonEngine.AcquireLock();
+            if (!PythonEngine.IsInitialized)
+            {
+                isEngineValid = false;
+                return;
+            }
+            else
+            {
+                state = PythonEngine.AcquireLock();
+                isEngineValid = true;
+            }
         }
 
         public virtual void Dispose()
         {
-            if (this.isDisposed)
+            if (isDisposed)
             {
                 return;
             }
 
-            PythonEngine.ReleaseLock(state);
+            if (isEngineValid)
+            {
+                PythonEngine.ReleaseLock(state);
+            }
+
             GC.SuppressFinalize(this);
-            this.isDisposed = true;
+            isDisposed = true;
         }
 
         ~GILState()

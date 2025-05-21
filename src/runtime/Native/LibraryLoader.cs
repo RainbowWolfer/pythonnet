@@ -66,7 +66,7 @@ namespace Python.Runtime.Platform
             if (res == IntPtr.Zero)
             {
                 var err = GetError();
-                throw new DllNotFoundException($"Could not load {dllToLoad} with flags RTLD_NOW | RTLD_GLOBAL: {err}");
+                throw new DllNotFoundException($"?? Could not load {dllToLoad} with flags RTLD_NOW | RTLD_GLOBAL: {err}");
             }
 
             return res;
